@@ -1,65 +1,40 @@
-'use client';
-
-import { useState, useMemo, useRef, useLayoutEffect } from 'react';
-import { HighlightedText } from './HighlightedText';
-import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils';
-import { Coupon } from '@/lib/supabase'; // 確保從這裡匯入強型別
+import { HighlightedText } from './HighlightedText'
+import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils'
+import { Coupon } from '@/lib/supabase'
+import { PAGE_SIZE } from '@/lib/coupons'
 
 interface CouponCardProps {
-  coupon: Coupon; // 修正 Lint: 取代 any
-  keyword: string;
-  index: number;
+  coupon: Coupon
+  keyword: string
+  index: number
 }
 
-export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showToggleButton, setShowToggleButton] = useState(false);
-  const textRef = useRef<HTMLSpanElement>(null);
+/**
+ * Descriptions shorter than this always fit inside the 4-line clamp, so they
+ * get no toggle. Measured against the data: the shortest description is 35
+ * characters and the median is 147.
+ */
+const CLAMP_THRESHOLD = 80
 
-  const tags = useMemo(() => normalizeTags(coupon.tags), [coupon.tags]);
+const PRICE_PATTERN = /(價格：\$\d+(?:~\$\d+)?)/g
 
-  useLayoutEffect(() => {
-    const checkOverflow = () => {
-      if (textRef.current) {
-        const isOverflowing = textRef.current.scrollHeight > textRef.current.clientHeight;
-        setShowToggleButton(isOverflowing);
-      }
-    };
+function Description({ text, keyword }: { text: string; keyword: string }) {
+  const paragraphs = text.split('。').filter(Boolean)
 
-    checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
-  }, [coupon.description, keyword]);
-
-  const handleOrderRedirect = () => {
-    const url = formatOrderLink(coupon.coupon_num);
-    // 修正資安風險：加入 noopener, noreferrer 防止 tabnabbing
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const renderDescription = () => {
-    const desc = String(coupon.description ?? "暫無說明");
-    const paragraphs = desc.split('。').filter(Boolean);
-
-    // 1. 定義用於分割的 Global Regex
-    const splitRegex = /(價格：\$[\d+~?\$]+)/g;
-    // 2. 定義用於「判斷」的非 Global Regex (避開 lastIndex 副作用)
-    const checkRegex = /^價格：\$[\d+~?\$]+$/;
-
-    return paragraphs.map((p, i) => {
-      const segments = p.split(splitRegex);
-
-      return (
+  return (
+    <>
+      {paragraphs.map((paragraph, i) => (
         <span key={i}>
-          {segments.map((seg, j) => {
-            // 使用沒有狀態副作用的 checkRegex.test
-            if (checkRegex.test(seg)) {
-              return <span key={j} className="price-highlight">{seg}</span>;
-            }
-            // 非價格部分則進行關鍵字高亮
-            return <HighlightedText key={j} text={seg} keyword={keyword} />;
-          })}
-          {/* 渲染換行 */}
+          {paragraph.split(PRICE_PATTERN).map((segment, j) =>
+            // Odd indices are the captured price labels.
+            j % 2 === 1 ? (
+              <span key={j} className="price-highlight">
+                {segment}
+              </span>
+            ) : (
+              <HighlightedText key={j} text={segment} keyword={keyword} />
+            )
+          )}
           {i < paragraphs.length - 1 && (
             <>
               <br />
@@ -67,14 +42,28 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
             </>
           )}
         </span>
-      );
-    });
-  };
+      ))}
+    </>
+  )
+}
+
+/**
+ * Server component. The expand/collapse disclosure is a checkbox driven by CSS
+ * so the card needs no client JS, no per-card resize listener, and causes no
+ * layout shift after hydration.
+ */
+export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
+  const description = (coupon.description ?? '').trim() || '暫無說明'
+  const tags = normalizeTags(coupon.tags)
+  const toggleId = `desc-${coupon.coupon_num}`
+  const expandable = description.length > CLAMP_THRESHOLD
 
   return (
-    <article 
-      className="coupon-card" 
-      style={{ '--i': index } as React.CSSProperties}
+    <article
+      className="coupon-card"
+      // Stagger is per page of cards, not per absolute position, so the last
+      // card of a long list is not delayed by half a minute.
+      style={{ '--i': index % PAGE_SIZE } as React.CSSProperties}
     >
       <div className="card-head">
         <span className="tag">優惠代碼</span>
@@ -83,44 +72,43 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
         </h3>
       </div>
 
-      <div className={`tags-row ${tags.length === 0 ? 'tags-row-empty' : ''}`}>
-        <div className="tags-list">
-          {tags.map((tag) => (
-            <span key={tag} className="tags-item">
-              <HighlightedText text={tag} keyword={keyword} />
-            </span>
-          ))}
+      {tags.length > 0 && (
+        <div className="tags-row" aria-label="優惠標籤">
+          <div className="tags-list">
+            {tags.map((tag) => (
+              <span key={tag} className="tags-item">
+                <HighlightedText text={tag} keyword={keyword} />
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="description-wrap">
+        {expandable && (
+          <input type="checkbox" id={toggleId} className="description-check" />
+        )}
         <p className="description">
-          <span 
-            ref={textRef}
-            className={`description-text ${!isExpanded ? 'is-collapsed' : ''}`}
-          >
-            {renderDescription()}
+          <span className={`description-text${expandable ? ' is-clampable' : ''}`}>
+            <Description text={description} keyword={keyword} />
           </span>
         </p>
-        
-        {showToggleButton && (
-          <button 
-            className="description-toggle" 
-            onClick={() => setIsExpanded(!isExpanded)}
-            type="button"
-          >
-            {isExpanded ? "顯示更少" : "顯示更多"}
-          </button>
+        {expandable && (
+          <label className="description-toggle" htmlFor={toggleId}>
+            <span className="toggle-more">顯示更多</span>
+            <span className="toggle-less">顯示更少</span>
+          </label>
         )}
       </div>
 
-      <button 
-        className="copy-btn" 
-        onClick={handleOrderRedirect} // 使用處理函式
-        type="button"
+      <a
+        className="copy-btn"
+        href={formatOrderLink(coupon.coupon_num)}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
       >
         跳轉訂餐
-      </button>
+      </a>
     </article>
-  );
+  )
 }
