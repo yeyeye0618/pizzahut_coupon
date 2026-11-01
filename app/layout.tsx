@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Coupon codes, counts and prices are set in mono; it carries most of the
+// theme. Latin only, so the self-hosted subset stays small.
+//
+// The Chinese text deliberately stays on system fonts: a self-hosted CJK
+// webfont is megabytes, and PingFang TC / Microsoft JhengHei already look
+// right on the platforms that matter here.
+const mono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 // Needed so the canonical and robots URLs that page.tsx emits resolve absolutely.
@@ -28,10 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="zh-Hant-TW" className={`${mono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
