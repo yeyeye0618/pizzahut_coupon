@@ -1,7 +1,6 @@
-import Link from 'next/link'
-import { CouponQuery, couponHref, toggleTag, withQuery } from '@/lib/coupons'
+import { CouponQuery } from '@/lib/coupons'
 import { SearchBox } from './SearchBox'
-import { SortSelect } from './SortSelect'
+import { TagFilters } from './TagFilters'
 
 type CouponFiltersProps = {
   query: CouponQuery
@@ -12,11 +11,8 @@ type CouponFiltersProps = {
 }
 
 /**
- * Server component. Tag and match-mode controls are real anchors, so they work
- * without JS and the state lives in the URL instead of in React state.
- *
- * They carry rel="nofollow" on purpose: ?tags= combinations are a user-facing
- * slice, not a canonical listing. The indexable tag pages arrive as /tag/[tag].
+ * Server component. Filter state lives in the URL rather than in React state;
+ * the controls themselves are anchors and GET forms, so they work without JS.
  */
 export function CouponFilters({ query, tags, total, showing, matched }: CouponFiltersProps) {
   const hasFilter = Boolean(query.q) || query.tags.length > 0
@@ -45,43 +41,7 @@ export function CouponFilters({ query, tags, total, showing, matched }: CouponFi
       </div>
 
       <div className="filter-bar">
-        <div className="filter-head">
-          <div className="tags-filter-list" aria-label="標籤篩選">
-            {tags.map(({ tag, count }) => {
-              const active = query.tags.includes(tag)
-              return (
-                <Link
-                  key={tag}
-                  href={couponHref(toggleTag(query, tag))}
-                  className={`filter-tag${active ? ' active' : ''}`}
-                  aria-pressed={active}
-                  rel="nofollow"
-                >
-                  {tag}
-                  <span className="filter-tag-count">{count}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          <div className="filter-tools">
-            <div className="match-mode" role="group" aria-label="標籤篩選模式">
-              {(['union', 'intersection'] as const).map((mode) => (
-                <Link
-                  key={mode}
-                  href={couponHref(withQuery(query, { mode }))}
-                  className={`mode-option${query.mode === mode ? ' active' : ''}`}
-                  aria-pressed={query.mode === mode}
-                  rel="nofollow"
-                >
-                  {mode === 'union' ? 'OR' : 'AND'}
-                </Link>
-              ))}
-            </div>
-
-            <SortSelect query={query} />
-          </div>
-        </div>
+        <TagFilters query={query} tags={tags} />
       </div>
 
       <p className="status" aria-live="polite">

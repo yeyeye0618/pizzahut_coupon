@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { CouponQuery, couponHref, withQuery } from '@/lib/coupons'
+import { NavLink } from './NavLink'
 
 /** How many numbered links to show either side of the current page. */
 const WINDOW = 2
@@ -24,16 +24,16 @@ export function Pagination({ query, page, pageCount }: { query: CouponQuery; pag
   return (
     <nav className="pagination" aria-label="分頁導覽">
       {page > 1 && (
-        <Link className="page-link" href={couponHref(withQuery(query, { page: page - 1 }))} rel="prev">
+        <NavLink className="page-link" href={couponHref(withQuery(query, { page: page - 1 }))} rel="prev">
           上一頁
-        </Link>
+        </NavLink>
       )}
 
       {pages[0] > 1 && (
         <>
-          <Link className="page-link" href={couponHref(withQuery(query, { page: 1 }))}>
+          <NavLink className="page-link" href={couponHref(withQuery(query, { page: 1 }))}>
             1
-          </Link>
+          </NavLink>
           {pages[0] > 2 && <span className="page-gap">…</span>}
         </>
       )}
@@ -44,25 +44,25 @@ export function Pagination({ query, page, pageCount }: { query: CouponQuery; pag
             {n}
           </span>
         ) : (
-          <Link key={n} className="page-link" href={couponHref(withQuery(query, { page: n }))}>
+          <NavLink key={n} className="page-link" href={couponHref(withQuery(query, { page: n }))}>
             {n}
-          </Link>
+          </NavLink>
         )
       )}
 
       {pages[pages.length - 1] < pageCount && (
         <>
           {pages[pages.length - 1] < pageCount - 1 && <span className="page-gap">…</span>}
-          <Link className="page-link" href={couponHref(withQuery(query, { page: pageCount }))}>
+          <NavLink className="page-link" href={couponHref(withQuery(query, { page: pageCount }))}>
             {pageCount}
-          </Link>
+          </NavLink>
         </>
       )}
 
       {page < pageCount && (
-        <Link className="page-link" href={couponHref(withQuery(query, { page: page + 1 }))} rel="next">
+        <NavLink className="page-link" href={couponHref(withQuery(query, { page: page + 1 }))} rel="next">
           下一頁
-        </Link>
+        </NavLink>
       )}
     </nav>
   )
