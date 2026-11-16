@@ -1,6 +1,7 @@
 import { CouponQuery } from '@/lib/coupons'
 import { SearchBox } from './SearchBox'
 import { TagFilters } from './TagFilters'
+import { ThemeSwitcher } from './ThemeSwitcher'
 
 type CouponFiltersProps = {
   query: CouponQuery
@@ -24,6 +25,7 @@ export function CouponFilters({ query, tags, total, showing, matched }: CouponFi
           <span className="brand-dot" />
           PIZZA HUT COUPON
         </div>
+        <ThemeSwitcher />
       </div>
       <h1>必勝客折價券大全</h1>
       <p className="subtitle">

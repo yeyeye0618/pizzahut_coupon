@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CouponFilters } from '@/components/CouponFilters'
 import { CouponGrid } from '@/components/CouponGrid'
+import { JsonLd } from '@/components/JsonLd'
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site'
 import { Pagination } from '@/components/Pagination'
 import {
   DEFAULT_QUERY,
@@ -23,17 +25,17 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const query = parseCouponQuery(await searchParams)
   const filtered = isFilteredView(query)
   const suffix = query.page > 1 ? `（第 ${query.page} 頁）` : ''
+  const canonical = filtered ? '/' : couponHref({ ...DEFAULT_QUERY, page: query.page })
 
   return {
-    title: `必勝客折價券大全｜Pizza Hut 優惠代碼查詢${suffix}`,
-    description:
-      '收錄台灣必勝客（Pizza Hut）折價券優惠代碼，可依口味、尺寸、配餐篩選並依價格排序，一鍵跳轉訂餐，持續更新最新優惠。',
+    // absolute: the layout's "%s｜必勝客折價券大全" template would repeat the name.
+    title: { absolute: `${SITE_TITLE}${suffix}` },
+    description: SITE_DESCRIPTION,
     // A searched or tag-filtered view is a user-facing slice, not a listing we
     // want in the index; the paginated listing itself is indexable.
     robots: filtered ? { index: false, follow: true } : { index: true, follow: true },
-    alternates: {
-      canonical: filtered ? '/' : couponHref({ ...DEFAULT_QUERY, page: query.page }),
-    },
+    alternates: { canonical },
+    openGraph: { url: canonical },
   }
 }
 
@@ -52,6 +54,9 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   return (
     <main className="container">
+      {!isFilteredView(query) && (
+        <JsonLd coupons={items} path={couponHref({ ...DEFAULT_QUERY, page })} />
+      )}
       <CouponFilters
         query={query}
         tags={collectTags(allCoupons)}
