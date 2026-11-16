@@ -1,0 +1,174 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { CouponGrid } from '@/components/CouponGrid'
+import { JsonLd } from '@/components/JsonLd'
+import { Pagination } from '@/components/Pagination'
+import { SiteFooter } from '@/components/SiteFooter'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import {
+  DEFAULT_QUERY,
+  PAGE_SIZE,
+  couponHref,
+  couponsWithTag,
+  formatUpdateDate,
+  getCoupons,
+  landingTags,
+  latestUpdate,
+  lowestPrice,
+  paginate,
+  tagHref,
+} from '@/lib/coupons'
+
+// Prebuilt at deploy, refreshed hourly like the data cache. A tag that shows
+// up later is rendered on its first request and cached from then on.
+export const revalidate = 3600
+export const dynamicParams = true
+
+type Params = { tag: string; page?: string[] }
+type PageProps = { params: Promise<Params> }
+
+export async function generateStaticParams(): Promise<Params[]> {
+  const coupons = await getCoupons()
+  return landingTags(coupons).flatMap(({ tag, count }) => {
+    const pageCount = Math.ceil(count / PAGE_SIZE)
+    return Array.from({ length: pageCount }, (_, i) => ({
+      tag,
+      page: i === 0 ? [] : [String(i + 1)],
+    }))
+  })
+}
+
+function decode(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+/**
+ * Resolve the URL to a tag and page, or null for anything that is not a real
+ * landing page: an unknown or too-small tag, "/tag/x/1" (page 1 has no
+ * number), a non-numeric or out-of-range page, or extra segments.
+ */
+async function resolve(params: Promise<Params>) {
+  const { tag: rawTag, page: segments = [] } = await params
+  const tag = decode(rawTag)
+
+  if (segments.length > 1) return null
+  let page = 1
+  if (segments.length === 1) {
+    if (!/^[1-9]\d*$/.test(segments[0]) || segments[0] === '1') return null
+    page = Number(segments[0])
+  }
+
+  const coupons = await getCoupons()
+  const known = landingTags(coupons).find((t) => t.tag === tag)
+  if (!known) return null
+
+  const tagged = couponsWithTag(coupons, tag)
+  const slice = paginate(tagged, page)
+  if (page > slice.pageCount) return null
+
+  return {
+    tag,
+    page,
+    slice,
+    lowest: lowestPrice(tagged),
+    updated: latestUpdate(coupons),
+    allTags: landingTags(coupons),
+  }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const data = await resolve(params)
+  if (!data) return {}
+
+  const { tag, page, slice, lowest } = data
+  const suffix = page > 1 ? `（第 ${page} 頁）` : ''
+  const from = lowest != null ? `，$${lowest} 起` : ''
+  const canonical = tagHref(tag, page)
+
+  return {
+    title: { absolute: `必勝客${tag}優惠券｜${slice.total} 組優惠代碼${from}${suffix}` },
+    description: `整理必勝客（Pizza Hut）${tag}相關的 ${slice.total} 組優惠代碼${
+      lowest != null ? `，最低 $${lowest}` : ''
+    }，依價格由低到高排列，點選即可帶入代碼訂餐。`,
+    alternates: { canonical },
+    openGraph: { url: canonical },
+  }
+}
+
+export default async function TagPage({ params }: PageProps) {
+  const data = await resolve(params)
+  if (!data) notFound()
+
+  const { tag, page, slice, lowest, updated, allTags } = data
+  const query = { ...DEFAULT_QUERY, tags: [tag] }
+
+  return (
+    <main className="container">
+      <JsonLd
+        coupons={slice.items}
+        path={tagHref(tag, page)}
+        name={`必勝客${tag}優惠券`}
+        dateModified={updated}
+      />
+
+      <section className="hero">
+        <div className="hero-top">
+          <nav className="breadcrumb" aria-label="麵包屑">
+            <Link href="/">必勝客折價券大全</Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">{tag}</span>
+          </nav>
+          <ThemeSwitcher />
+        </div>
+
+        <h1>必勝客{tag}優惠券</h1>
+        <p className="subtitle">
+          目前共有 {slice.total} 組含「{tag}」的必勝客優惠代碼
+          {lowest != null && <>，最低 ${lowest} 起</>}
+          ，依價格由低到高排列。點「跳轉訂餐」會直接帶入代碼開啟官網訂餐頁。
+        </p>
+
+        <div className="tag-page-meta">
+          <div className="pill">
+            優惠數 <span>{slice.total}</span>
+          </div>
+          {lowest != null && (
+            <div className="pill">
+              最低價 <span>${lowest}</span>
+            </div>
+          )}
+          <Link className="tag-page-filter" href={couponHref(query)} rel="nofollow">
+            在完整列表搭配其他條件篩選 →
+          </Link>
+        </div>
+
+        {updated && (
+          <p className="status">
+            資料更新：<time dateTime={updated.toISOString()}>{formatUpdateDate(updated)}</time>
+          </p>
+        )}
+      </section>
+
+      <section>
+        <CouponGrid query={query} coupons={slice.items} />
+        <Pagination
+          page={slice.page}
+          pageCount={slice.pageCount}
+          hrefFor={(n) => tagHref(tag, n)}
+        />
+        {slice.pageCount > 1 && (
+          <p className="result-summary">
+            共 {slice.total} 筆，第 {slice.page} / {slice.pageCount} 頁
+          </p>
+        )}
+      </section>
+
+      <SiteFooter tags={allTags} updated={updated} currentTag={tag} />
+    </main>
+  )
+}

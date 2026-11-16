@@ -1,4 +1,4 @@
-import { CouponQuery } from '@/lib/coupons'
+import { CouponQuery, formatUpdateDate } from '@/lib/coupons'
 import { SearchBox } from './SearchBox'
 import { TagFilters } from './TagFilters'
 import { ThemeSwitcher } from './ThemeSwitcher'
@@ -9,13 +9,15 @@ type CouponFiltersProps = {
   total: number
   showing: number
   matched: number
+  /** Newest updated_at in the data, shown so visitors can judge freshness. */
+  updated: Date | null
 }
 
 /**
  * Server component. Filter state lives in the URL rather than in React state;
  * the controls themselves are anchors and GET forms, so they work without JS.
  */
-export function CouponFilters({ query, tags, total, showing, matched }: CouponFiltersProps) {
+export function CouponFilters({ query, tags, total, showing, matched, updated }: CouponFiltersProps) {
   const hasFilter = Boolean(query.q) || query.tags.length > 0
 
   return (
@@ -52,6 +54,12 @@ export function CouponFilters({ query, tags, total, showing, matched }: CouponFi
           : hasFilter
             ? `找到 ${matched} 筆符合條件的結果`
             : `已收錄 ${total} 筆最新優惠`}
+        {updated && (
+          <>
+            <span aria-hidden="true"> · </span>
+            資料更新 <time dateTime={updated.toISOString()}>{formatUpdateDate(updated)}</time>
+          </>
+        )}
       </p>
     </section>
   )

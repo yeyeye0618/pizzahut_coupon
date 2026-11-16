@@ -1063,6 +1063,127 @@ h1 {
     letter-spacing: 0.03em;
 }
 
+/* ---------- tag landing pages ---------- */
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.84rem;
+    color: var(--text-dim);
+}
+
+.breadcrumb a {
+    color: var(--text-soft);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.breadcrumb [aria-current] {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.tag-page-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tag-page-filter {
+    margin-left: auto;
+    color: var(--cyan);
+    font-size: 0.86rem;
+    text-decoration: none;
+}
+
+.tag-page-filter:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ---------- footer: category links + data freshness ---------- */
+
+.site-footer {
+    margin-top: 40px;
+    padding: 22px 0 0;
+    border-top: 1px solid var(--line);
+}
+
+.category-nav-title {
+    margin: 0 0 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.category-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.category-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-elev);
+    color: var(--text-soft);
+    font-size: 0.86rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease-out, color 0.15s ease-out;
+}
+
+.category-link span {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--text-dim);
+}
+
+a.category-link:hover {
+    border-color: var(--cyan-line);
+    color: var(--text);
+}
+
+.category-link.is-current {
+    border-color: var(--line-strong);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.category-link:focus-visible,
+.breadcrumb a:focus-visible,
+.tag-page-filter:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.footer-note {
+    margin: 18px 0 0;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+    .tag-page-filter {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+}
+
 .sr-only {
     position: absolute;
     width: 1px;
