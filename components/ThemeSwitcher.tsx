@@ -39,7 +39,14 @@ function getServerSnapshot(): Theme | null {
 }
 
 function applyTheme(theme: Theme, persist: boolean) {
-  document.documentElement.dataset.theme = theme
+  const root = document.documentElement
+  // Without this every element with a colour transition fades from the old
+  // theme for 150ms, so for a moment dark text sits on dark pills (and light
+  // on light). Swap instantly, then give transitions back.
+  root.classList.add('theme-switching')
+  root.dataset.theme = theme
+  void root.offsetHeight // commit the new colours while transitions are off
+  setTimeout(() => root.classList.remove('theme-switching'), 0)
   if (persist) {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme)
