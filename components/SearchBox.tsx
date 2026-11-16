@@ -3,6 +3,7 @@
 import { useEffect, useRef, useTransition, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { CouponQuery, couponHref, withQuery } from '@/lib/coupons'
+import { getFavorites, useFavorites } from '@/lib/favorites'
 
 const DEBOUNCE_MS = 300
 
@@ -25,6 +26,8 @@ export function SearchBox({ query }: { query: CouponQuery }) {
   const [isPending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const favorites = useFavorites()
+  const favView = query.fav !== null
 
   // Re-sync the field when the keyword in the URL changes from somewhere else
   // (back button, a shared link). While typing the URL has not changed yet, so
@@ -76,6 +79,18 @@ export function SearchBox({ query }: { query: CouponQuery }) {
     searchSoon('')
   }
 
+  // Opening the view snapshots the saved codes into the URL, which is what the
+  // server filters on. Search, tags and sort keep applying inside it.
+  const toggleFavView = () => {
+    cancelPending()
+    const fav = favView ? null : [...getFavorites()]
+    // Focus left inside the form would open the suggestions over the results.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    startTransition(() => {
+      router.push(couponHref(withQuery(query, { fav })))
+    })
+  }
+
   const pickTerm = (term: string) => {
     const input = inputRef.current
     if (!input) return
@@ -90,6 +105,7 @@ export function SearchBox({ query }: { query: CouponQuery }) {
       {query.tags.length > 0 && <input type="hidden" name="tags" value={query.tags.join(',')} />}
       {query.mode !== 'union' && <input type="hidden" name="mode" value={query.mode} />}
       {query.sort !== 'price-asc' && <input type="hidden" name="sort" value={query.sort} />}
+      {favView && <input type="hidden" name="fav" value={query.fav?.join(",") ?? ""} />}
       <div className="search-field">
         <svg
           className="search-icon"
@@ -128,6 +144,21 @@ export function SearchBox({ query }: { query: CouponQuery }) {
           >
             <path d="M6 6l12 12M18 6 6 18" />
           </svg>
+        </button>
+        <button
+          type="button"
+          className="search-fav"
+          aria-pressed={favView}
+          title={favView ? '顯示全部優惠券' : '只看最愛'}
+          onClick={toggleFavView}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />
+          </svg>
+          <span>最愛</span>
+          {favorites !== null && favorites.length > 0 && (
+            <span className="search-fav-count">{favorites.length}</span>
+          )}
         </button>
       </div>
 

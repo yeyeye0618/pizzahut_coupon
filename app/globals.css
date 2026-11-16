@@ -31,6 +31,9 @@
     --cyan-line: rgba(53, 227, 240, 0.3);
     /* Text on a solid --cyan background (search keyword highlight). */
     --on-cyan: #06121a;
+    --star: #ffc53d;
+    --star-soft: rgba(255, 197, 61, 0.12);
+    --star-line: rgba(255, 197, 61, 0.38);
 
     --glow-a: rgba(255, 65, 51, 0.16);
     --glow-b: rgba(53, 227, 240, 0.1);
@@ -68,6 +71,9 @@
     --cyan-soft: rgba(11, 127, 138, 0.09);
     --cyan-line: rgba(11, 127, 138, 0.32);
     --on-cyan: #ffffff;
+    --star: #b45309;
+    --star-soft: rgba(180, 83, 9, 0.08);
+    --star-line: rgba(180, 83, 9, 0.32);
 
     --glow-a: rgba(212, 42, 30, 0.08);
     --glow-b: rgba(11, 127, 138, 0.07);
@@ -101,6 +107,9 @@
         --cyan-soft: rgba(11, 127, 138, 0.09);
         --cyan-line: rgba(11, 127, 138, 0.32);
         --on-cyan: #ffffff;
+        --star: #b45309;
+        --star-soft: rgba(180, 83, 9, 0.08);
+        --star-line: rgba(180, 83, 9, 0.32);
 
         --glow-a: rgba(212, 42, 30, 0.08);
         --glow-b: rgba(11, 127, 138, 0.07);
@@ -399,6 +408,66 @@ h1 {
     display: none;
 }
 
+/* "Only favourites" toggle at the end of the field. */
+.search-fav {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-soft);
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.search-fav svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linejoin: round;
+}
+
+.search-fav:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+}
+
+.search-fav[aria-pressed="true"] {
+    color: var(--star);
+    border-color: var(--star-line);
+    background: var(--star-soft);
+}
+
+.search-fav[aria-pressed="true"] svg {
+    fill: currentColor;
+}
+
+.search-fav-count {
+    min-width: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--bg-elev-2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    line-height: 18px;
+    text-align: center;
+}
+
+.search-fav:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
 /* Suggestions open only for a focused, still-empty field: once there is text
    in it they would be answering a question nobody is asking any more. */
 .search-suggest {
@@ -675,6 +744,65 @@ h1 {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+}
+
+.card-code {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Star toggle beside the code. Outline when off, filled amber when saved. */
+.fav-btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin-right: -6px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.15s ease-out, background-color 0.15s ease-out, transform 0.15s ease-out;
+}
+
+.fav-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+}
+
+.fav-btn:hover {
+    color: var(--star);
+    background: var(--star-soft);
+}
+
+.fav-btn[aria-pressed="true"] {
+    color: var(--star);
+}
+
+.fav-btn[aria-pressed="true"] svg {
+    fill: currentColor;
+}
+
+.fav-btn:active {
+    transform: scale(0.9);
+}
+
+.fav-btn:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 1px;
+}
+
+@media (pointer: coarse) {
+    .fav-btn {
+        width: 42px;
+        height: 42px;
+    }
 }
 
 .tag {

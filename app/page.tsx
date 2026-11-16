@@ -66,7 +66,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       />
 
       <section>
-        <CouponGrid coupons={items} keyword={query.q} />
+        <CouponGrid query={query} coupons={items} />
         <Pagination query={query} page={page} pageCount={pageCount} />
         {total > 0 && (
           <p className="result-summary">

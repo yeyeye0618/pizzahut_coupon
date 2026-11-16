@@ -16,6 +16,12 @@ export type CouponQuery = {
   mode: MatchMode
   sort: SortMode
   page: number
+  /**
+   * Favourites view: the coupon codes to restrict to, or null when the view
+   * is not active. The list travels in the URL (the favourites themselves live
+   * in localStorage), so the server can render it like any other filter.
+   */
+  fav: string[] | null
 }
 
 export const DEFAULT_QUERY: CouponQuery = {
@@ -24,7 +30,12 @@ export const DEFAULT_QUERY: CouponQuery = {
   mode: 'union',
   sort: 'price-asc',
   page: 1,
+  fav: null,
 }
+
+/** Upper bound on codes read from ?fav=, so a crafted URL cannot get huge. */
+const MAX_FAV_CODES = 500
+const COUPON_CODE = /^[A-Za-z0-9_-]{1,32}$/
 
 /**
  * Every coupon, cached across requests. The data behind this changes once per
@@ -63,7 +74,17 @@ export function parseCouponQuery(params: RawSearchParams): CouponQuery {
     mode: firstValue(params.mode) === 'intersection' ? 'intersection' : 'union',
     sort: firstValue(params.sort) === 'price-desc' ? 'price-desc' : 'price-asc',
     page: Number.isFinite(page) && page > 0 ? page : 1,
+    fav: parseFav(params.fav),
   }
+}
+
+function parseFav(value: string | string[] | undefined): string[] | null {
+  if (value === undefined) return null
+  const codes = String(firstValue(value) ?? '')
+    .split(',')
+    .map((code) => code.trim())
+    .filter((code) => COUPON_CODE.test(code))
+  return [...new Set(codes)].slice(0, MAX_FAV_CODES)
 }
 
 /** Serialise a query back to a URL, omitting anything that is still the default. */
@@ -74,6 +95,7 @@ export function couponHref(query: CouponQuery, pathname = '/'): string {
   if (query.mode !== DEFAULT_QUERY.mode) params.set('mode', query.mode)
   if (query.sort !== DEFAULT_QUERY.sort) params.set('sort', query.sort)
   if (query.page > 1) params.set('page', String(query.page))
+  if (query.fav) params.set('fav', query.fav.join(','))
   const search = params.toString()
   return search ? `${pathname}?${search}` : pathname
 }
@@ -99,7 +121,12 @@ export function toggleTag(query: CouponQuery, tag: string): CouponQuery {
  * These get noindex so 2^n filter combinations never enter the index.
  */
 export function isFilteredView(query: CouponQuery): boolean {
-  return Boolean(query.q) || query.tags.length > 0 || query.sort !== DEFAULT_QUERY.sort
+  return (
+    Boolean(query.q) ||
+    query.tags.length > 0 ||
+    query.sort !== DEFAULT_QUERY.sort ||
+    query.fav !== null
+  )
 }
 
 export function collectTags(coupons: Coupon[]): { tag: string; count: number }[] {
@@ -133,9 +160,12 @@ function matchesKeyword(coupon: Coupon, keyword: string): boolean {
 }
 
 export function filterCoupons(coupons: Coupon[], query: CouponQuery): Coupon[] {
+  const favs = query.fav ? new Set(query.fav) : null
   return coupons.filter(
     (coupon) =>
-      matchesKeyword(coupon, query.q) && matchesTags(normalizeTags(coupon.tags), query)
+      (!favs || favs.has(coupon.coupon_num)) &&
+      matchesKeyword(coupon, query.q) &&
+      matchesTags(normalizeTags(coupon.tags), query)
   )
 }
 
