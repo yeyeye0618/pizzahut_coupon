@@ -17,8 +17,8 @@
     --line-strong: #2d3a4b;
 
     --text: #e6edf6;
-    --text-soft: #93a3b8;
-    --text-dim: #6b7c92;
+    --text-soft: #b6c2d1;
+    --text-dim: #8e9cb0;
 
     /* Pizza Hut red, lifted enough to stay legible on near-black. */
     --accent: #ff4133;
@@ -59,15 +59,15 @@
     --line-strong: #c3ccd7;
 
     --text: #111a24;
-    --text-soft: #475669;
-    --text-dim: #637287;
+    --text-soft: #2e3a49;
+    --text-dim: #4a5667;
 
     --accent: #d42a1e;
     --accent-2: #c2410c;
     --accent-soft: rgba(212, 42, 30, 0.08);
     --accent-glow: rgba(212, 42, 30, 0.16);
 
-    --cyan: #0b7f8a;
+    --cyan: #08656e;
     --cyan-soft: rgba(11, 127, 138, 0.09);
     --cyan-line: rgba(11, 127, 138, 0.32);
     --on-cyan: #ffffff;
@@ -95,15 +95,15 @@
         --line-strong: #c3ccd7;
 
         --text: #111a24;
-        --text-soft: #475669;
-        --text-dim: #637287;
+        --text-soft: #2e3a49;
+        --text-dim: #4a5667;
 
         --accent: #d42a1e;
         --accent-2: #c2410c;
         --accent-soft: rgba(212, 42, 30, 0.08);
         --accent-glow: rgba(212, 42, 30, 0.16);
 
-        --cyan: #0b7f8a;
+        --cyan: #08656e;
         --cyan-soft: rgba(11, 127, 138, 0.09);
         --cyan-line: rgba(11, 127, 138, 0.32);
         --on-cyan: #ffffff;
@@ -249,6 +249,14 @@ body::before {
 }
 
 /* ---------- theme switch (segmented radio group) ---------- */
+
+/* Set for one tick by ThemeSwitcher so the palette swaps without fading. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+    transition: none !important;
+}
 
 .theme-switch {
     display: inline-flex;
@@ -545,8 +553,14 @@ h1 {
     }
 }
 
+/* Label and number share a baseline; align-content centres that line in the
+   fixed height (align-items: baseline alone pins it to the top). align-content
+   only applies to a wrapping flex container, hence flex-wrap; the pair is short
+   enough that it never actually wraps at min-width. */
 .pill {
     display: flex;
+    flex-wrap: wrap;
+    align-content: center;
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
