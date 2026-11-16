@@ -3,7 +3,7 @@
  * Point NEXT_PUBLIC_SITE_URL at the custom domain once it is live.
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pizzahut-coupon-front.vercel.app'
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pizzahutcoupon.vercel.app'
 ).replace(/\/+$/, '')
 
 export const SITE_NAME = '必勝客折價券大全'
