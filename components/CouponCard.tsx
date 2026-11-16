@@ -1,3 +1,4 @@
+import { FavoriteButton } from './FavoriteButton'
 import { HighlightedText } from './HighlightedText'
 import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils'
 import { Coupon } from '@/lib/supabase'
@@ -67,9 +68,12 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
     >
       <div className="card-head">
         <span className="tag">優惠代碼</span>
-        <h3 className="code">
-          <HighlightedText text={coupon.coupon_num} keyword={keyword} />
-        </h3>
+        <div className="card-code">
+          <h3 className="code">
+            <HighlightedText text={coupon.coupon_num} keyword={keyword} />
+          </h3>
+          <FavoriteButton code={coupon.coupon_num} />
+        </div>
       </div>
 
       {tags.length > 0 && (

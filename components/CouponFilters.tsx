@@ -47,7 +47,11 @@ export function CouponFilters({ query, tags, total, showing, matched }: CouponFi
       </div>
 
       <p className="status" aria-live="polite">
-        {hasFilter ? `找到 ${matched} 筆符合條件的結果` : `已收錄 ${total} 筆最新優惠`}
+        {query.fav !== null
+          ? `最愛：${matched} 筆${hasFilter ? '符合條件' : ''}`
+          : hasFilter
+            ? `找到 ${matched} 筆符合條件的結果`
+            : `已收錄 ${total} 筆最新優惠`}
       </p>
     </section>
   )
