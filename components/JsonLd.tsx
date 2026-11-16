@@ -6,6 +6,10 @@ type JsonLdProps = {
   coupons: Coupon[]
   /** Path of the page being rendered, e.g. "/" or "/?page=2". */
   path: string
+  /** Page name; defaults to the site name. */
+  name?: string
+  /** When the coupon data last changed. */
+  dateModified?: Date | null
 }
 
 /**
@@ -14,7 +18,7 @@ type JsonLdProps = {
  * markup still states plainly what each card is (a priced TWD offer with a
  * URL to redeem it).
  */
-export function JsonLd({ coupons, path }: JsonLdProps) {
+export function JsonLd({ coupons, path, name = SITE_NAME, dateModified }: JsonLdProps) {
   const pageUrl = absoluteUrl(path)
 
   const data = {
@@ -32,7 +36,8 @@ export function JsonLd({ coupons, path }: JsonLdProps) {
         '@type': 'CollectionPage',
         '@id': `${pageUrl}#page`,
         url: pageUrl,
-        name: SITE_NAME,
+        name,
+        ...(dateModified && { dateModified: dateModified.toISOString() }),
         isPartOf: { '@id': `${SITE_URL}/#website` },
         inLanguage: 'zh-Hant-TW',
         mainEntity: {

@@ -202,3 +202,57 @@ export function paginate(coupons: Coupon[], page: number): CouponPage {
     pageCount,
   }
 }
+
+// ---------- tag landing pages ----------
+
+/**
+ * A tag gets its own indexable page only with at least this many coupons; a
+ * page listing one coupon is thin content, not a landing page.
+ */
+export const MIN_TAG_PAGE_COUPONS = 3
+
+/** /tag/6吋, /tag/6吋/2 … Page 1 never carries a number, so it has one URL. */
+export function tagHref(tag: string, page = 1): string {
+  const base = `/tag/${encodeURIComponent(tag)}`
+  return page > 1 ? `${base}/${page}` : base
+}
+
+/** Tags that have a landing page, most coupons first. */
+export function landingTags(coupons: Coupon[]): { tag: string; count: number }[] {
+  return collectTags(coupons).filter(({ count }) => count >= MIN_TAG_PAGE_COUPONS)
+}
+
+export function couponsWithTag(coupons: Coupon[], tag: string): Coupon[] {
+  return sortCoupons(
+    coupons.filter((coupon) => normalizeTags(coupon.tags).includes(tag)),
+    'price-asc'
+  )
+}
+
+export function lowestPrice(coupons: Coupon[]): number | null {
+  const prices = coupons.map((c) => c.price).filter((p): p is number => p != null)
+  return prices.length ? Math.min(...prices) : null
+}
+
+// ---------- freshness ----------
+
+/** Newest updated_at in the data: when coupon_fetch last wrote anything. */
+export function latestUpdate(coupons: Coupon[]): Date | null {
+  let latest: Date | null = null
+  for (const coupon of coupons) {
+    const updated = new Date(coupon.updated_at)
+    if (Number.isNaN(updated.getTime())) continue
+    if (!latest || updated > latest) latest = updated
+  }
+  return latest
+}
+
+/** 2026/10/29, in Taiwan time whatever timezone the server runs in. */
+export function formatUpdateDate(date: Date): string {
+  return new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}

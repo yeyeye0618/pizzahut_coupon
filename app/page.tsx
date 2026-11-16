@@ -5,6 +5,7 @@ import { CouponGrid } from '@/components/CouponGrid'
 import { JsonLd } from '@/components/JsonLd'
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site'
 import { Pagination } from '@/components/Pagination'
+import { SiteFooter } from '@/components/SiteFooter'
 import {
   DEFAULT_QUERY,
   collectTags,
@@ -12,9 +13,12 @@ import {
   filterCoupons,
   getCoupons,
   isFilteredView,
+  landingTags,
+  latestUpdate,
   paginate,
   parseCouponQuery,
   sortCoupons,
+  withQuery,
 } from '@/lib/coupons'
 
 type PageProps = {
@@ -43,6 +47,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const query = parseCouponQuery(await searchParams)
   const allCoupons = await getCoupons()
 
+  const updated = latestUpdate(allCoupons)
   const matched = sortCoupons(filterCoupons(allCoupons, query), query.sort)
   const { items, total, page, pageCount } = paginate(matched, query.page)
 
@@ -55,7 +60,11 @@ export default async function HomePage({ searchParams }: PageProps) {
   return (
     <main className="container">
       {!isFilteredView(query) && (
-        <JsonLd coupons={items} path={couponHref({ ...DEFAULT_QUERY, page })} />
+        <JsonLd
+          coupons={items}
+          path={couponHref({ ...DEFAULT_QUERY, page })}
+          dateModified={updated}
+        />
       )}
       <CouponFilters
         query={query}
@@ -63,17 +72,24 @@ export default async function HomePage({ searchParams }: PageProps) {
         total={allCoupons.length}
         showing={items.length}
         matched={total}
+        updated={updated}
       />
 
       <section>
         <CouponGrid query={query} coupons={items} />
-        <Pagination query={query} page={page} pageCount={pageCount} />
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          hrefFor={(n) => couponHref(withQuery(query, { page: n }))}
+        />
         {total > 0 && (
           <p className="result-summary">
             共 {total} 筆，第 {page} / {pageCount} 頁
           </p>
         )}
       </section>
+
+      <SiteFooter tags={landingTags(allCoupons)} updated={updated} />
     </main>
   )
 }
