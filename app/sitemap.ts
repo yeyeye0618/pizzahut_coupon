@@ -42,5 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
   )
 
-  return [...listing, ...tags]
+  const guide = {
+    url: absoluteUrl('/guide'),
+    lastModified,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }
+
+  return [...listing, guide, ...tags]
 }
