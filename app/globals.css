@@ -952,6 +952,143 @@ h1 {
     font-weight: 700;
 }
 
+/* ---------- structured card: title, items, price row ---------- */
+
+.card-head {
+    align-items: flex-start;
+}
+
+.card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    margin: 0;
+}
+
+.coupon-name {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.item-list {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-soft);
+}
+
+.item-list li {
+    position: relative;
+    padding-left: 14px;
+}
+
+.item-list li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+/* Long flavour lists stay at two lines; 完整說明 has the full text. */
+.item-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.item-choice {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 1px 7px;
+    border: 1px solid var(--cyan-line);
+    border-radius: 999px;
+    background: var(--cyan-soft);
+    color: var(--cyan);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.price-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.price-now {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.price-unknown {
+    color: var(--text-dim);
+    font-size: 0.86rem;
+}
+
+.price-value {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+}
+
+.price-value s {
+    font-family: var(--mono);
+}
+
+.discount-badge {
+    margin-left: auto;
+    padding: 2px 9px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.full-desc summary {
+    width: fit-content;
+    color: var(--cyan);
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.full-desc summary:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.full-desc summary:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.full-desc-text {
+    margin: 8px 0 0;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--text-soft);
+}
+
 .keyword-highlight {
     background: var(--cyan);
     color: var(--on-cyan);

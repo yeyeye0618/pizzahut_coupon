@@ -2,7 +2,7 @@ import { FavoriteButton } from './FavoriteButton'
 import { HighlightedText } from './HighlightedText'
 import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils'
 import { Coupon } from '@/lib/supabase'
-import { PAGE_SIZE } from '@/lib/coupons'
+import { PAGE_SIZE, discountOf } from '@/lib/coupons'
 
 interface CouponCardProps {
   coupon: Coupon
@@ -18,6 +18,9 @@ interface CouponCardProps {
 const CLAMP_THRESHOLD = 80
 
 const PRICE_PATTERN = /(價格：\$\d+(?:~\$\d+)?)/g
+
+/** "(2選1)", "{3選1}", "(副食3選1)" at the end of an item becomes a badge. */
+const CHOICE_SUFFIX = /\s*[(（{｛]([^()（）{}｛｝]*?\d+選\d+)[)）}｝]\s*$/
 
 function Description({ text, keyword }: { text: string; keyword: string }) {
   const paragraphs = text.split('。').filter(Boolean)
@@ -48,16 +51,62 @@ function Description({ text, keyword }: { text: string; keyword: string }) {
   )
 }
 
+function ItemList({ items, keyword }: { items: string[]; keyword: string }) {
+  return (
+    <ul className="item-list">
+      {items.map((item, i) => {
+        const choice = item.match(CHOICE_SUFFIX)
+        const text = choice ? item.slice(0, choice.index) : item
+        return (
+          <li key={i}>
+            <span className="item-text">
+              <HighlightedText text={text} keyword={keyword} />
+            </span>
+            {choice && <span className="item-choice">{choice[1]}</span>}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/** The old layout: the whole description, clamped, with a CSS-only toggle. */
+function ClampedDescription({ coupon, text, keyword }: { coupon: Coupon; text: string; keyword: string }) {
+  const toggleId = `desc-${coupon.coupon_num}`
+  const expandable = text.length > CLAMP_THRESHOLD
+
+  return (
+    <div className="description-wrap">
+      {expandable && <input type="checkbox" id={toggleId} className="description-check" />}
+      <p className="description">
+        <span className={`description-text${expandable ? ' is-clampable' : ''}`}>
+          <Description text={text} keyword={keyword} />
+        </span>
+      </p>
+      {expandable && (
+        <label className="description-toggle" htmlFor={toggleId}>
+          <span className="toggle-more">顯示更多</span>
+          <span className="toggle-less">顯示更少</span>
+        </label>
+      )}
+    </div>
+  )
+}
+
 /**
- * Server component. The expand/collapse disclosure is a checkbox driven by CSS
- * so the card needs no client JS, no per-card resize listener, and causes no
- * layout shift after hydration.
+ * Server component. When coupon_fetch has parsed the coupon (name, items,
+ * 最高價值) it is laid out as a title, an item list and a price row, with the
+ * original text one click away. Coupons it has not reached yet keep the old
+ * clamped-description layout, so the card never shows less than before.
  */
 export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
   const description = (coupon.description ?? '').trim() || '暫無說明'
   const tags = normalizeTags(coupon.tags)
-  const toggleId = `desc-${coupon.coupon_num}`
-  const expandable = description.length > CLAMP_THRESHOLD
+  const items = coupon.items?.filter(Boolean) ?? []
+  const structured = items.length > 0
+  const discount = discountOf(coupon)
+  const showValue =
+    coupon.original_price != null && coupon.price != null && coupon.original_price > coupon.price
 
   return (
     <article
@@ -67,13 +116,17 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
       style={{ '--i': index % PAGE_SIZE } as React.CSSProperties}
     >
       <div className="card-head">
-        <span className="tag">優惠代碼</span>
-        <div className="card-code">
-          <h3 className="code">
+        <h3 className="card-title">
+          <span className="code">
             <HighlightedText text={coupon.coupon_num} keyword={keyword} />
-          </h3>
-          <FavoriteButton code={coupon.coupon_num} />
-        </div>
+          </span>
+          {coupon.name && (
+            <span className="coupon-name">
+              <HighlightedText text={coupon.name} keyword={keyword} />
+            </span>
+          )}
+        </h3>
+        <FavoriteButton code={coupon.coupon_num} />
       </div>
 
       {tags.length > 0 && (
@@ -88,22 +141,36 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
         </div>
       )}
 
-      <div className="description-wrap">
-        {expandable && (
-          <input type="checkbox" id={toggleId} className="description-check" />
-        )}
-        <p className="description">
-          <span className={`description-text${expandable ? ' is-clampable' : ''}`}>
+      {structured ? (
+        <ItemList items={items} keyword={keyword} />
+      ) : (
+        <ClampedDescription coupon={coupon} text={description} keyword={keyword} />
+      )}
+
+      {structured && (
+        <div className="price-row">
+          {coupon.price != null ? (
+            <span className="price-now">${coupon.price}</span>
+          ) : (
+            <span className="price-unknown">價格依官網</span>
+          )}
+          {showValue && (
+            <span className="price-value">
+              最高價值 <s>${coupon.original_price}</s>
+            </span>
+          )}
+          {discount != null && <span className="discount-badge">{discount} 折</span>}
+        </div>
+      )}
+
+      {structured && (
+        <details className="full-desc">
+          <summary>完整說明</summary>
+          <p className="full-desc-text">
             <Description text={description} keyword={keyword} />
-          </span>
-        </p>
-        {expandable && (
-          <label className="description-toggle" htmlFor={toggleId}>
-            <span className="toggle-more">顯示更多</span>
-            <span className="toggle-less">顯示更少</span>
-          </label>
-        )}
-      </div>
+          </p>
+        </details>
+      )}
 
       <a
         className="copy-btn"
