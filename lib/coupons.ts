@@ -285,21 +285,58 @@ export function findCoupon(coupons: Coupon[], code: string): Coupon | undefined 
 }
 
 /**
- * Up to `limit` other coupons sharing the most tags with this one, closest in
- * price first. Gives each coupon page useful onward links.
+ * What a coupon actually contains, as coarse product groups. Read from the
+ * name and items only: the full description carries boilerplate such as
+ * 「此套餐比薩餅皮升級…」 that would make a pasta deal look like a pizza deal.
+ */
+const PRODUCT_GROUPS: [string, RegExp][] = [
+  ['麵飯', /麵|燉飯/],
+  ['濃湯', /濃湯/],
+  ['QQ球', /QQ球/],
+  ['薯類', /薯金幣|薯條|薯球/],
+  ['雞軟骨', /雞軟骨/],
+  ['炸烤雞', /腿排|雞柳|雞球|雞翅|烤雞|BBQ/],
+  ['芝心腸', /芝心腸/],
+  ['海鮮點心', /鱈魚|蝦球/],
+  ['甜點', /起司塔|蛋塔|可頌|布朗尼|麻糬/],
+  ['飲料', /可樂|七喜|雪碧|紅茶|綠茶|柚茶|飲料/],
+  ['大比薩', /大比薩|13吋|鬆厚大/],
+  ['小比薩', /小比薩|9吋|10吋/],
+  ['個人比薩', /個人比薩|6吋/],
+  ['買一送一', /買一送一|買1送1/],
+]
+
+function productGroups(coupon: Coupon): Set<string> {
+  const items = coupon.items?.filter(Boolean) ?? []
+  // Unparsed rows fall back to the description, minus its boilerplate lines.
+  const text = [coupon.name ?? '', ...(items.length ? items : [coupon.description ?? ''])]
+    .join(' ')
+    .replace(/此套餐比[薩蕯]餅皮升級[^。]*/g, '')
+  return new Set(PRODUCT_GROUPS.filter(([, pattern]) => pattern.test(text)).map(([group]) => group))
+}
+
+/**
+ * Up to `limit` other coupons most like this one, to give each coupon page
+ * useful onward links. Shared contents (pasta with pasta, QQ球 with QQ球) count
+ * three times as much as a shared tag; ties go to the closest price.
  */
 export function relatedCoupons(coupons: Coupon[], coupon: Coupon, limit = 6): Coupon[] {
-  const own = new Set(normalizeTags(coupon.tags))
+  const ownTags = new Set(normalizeTags(coupon.tags))
+  const ownGroups = productGroups(coupon)
   const price = coupon.price ?? Number.POSITIVE_INFINITY
   return coupons
     .filter((other) => other.coupon_num !== coupon.coupon_num)
-    .map((other) => ({
-      other,
-      shared: normalizeTags(other.tags).filter((tag) => own.has(tag)).length,
-      gap: Math.abs((other.price ?? Number.POSITIVE_INFINITY) - price),
-    }))
-    .filter(({ shared }) => shared > 0)
-    .sort((a, b) => b.shared - a.shared || a.gap - b.gap || a.other.coupon_num.localeCompare(b.other.coupon_num))
+    .map((other) => {
+      const groups = [...productGroups(other)].filter((group) => ownGroups.has(group)).length
+      const tags = normalizeTags(other.tags).filter((tag) => ownTags.has(tag)).length
+      return {
+        other,
+        score: groups * 3 + tags,
+        gap: Math.abs((other.price ?? Number.POSITIVE_INFINITY) - price),
+      }
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.gap - b.gap || a.other.coupon_num.localeCompare(b.other.coupon_num))
     .slice(0, limit)
     .map(({ other }) => other)
 }
