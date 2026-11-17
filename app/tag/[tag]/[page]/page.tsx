@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { TagListing, resolveTag, tagMetadata, NO_PRERENDER } from '../listing'
+import { TagListing, resolveTag, tagMetadata, tagPageParams } from '../listing'
 
 export const revalidate = 3600
 export const dynamicParams = true
@@ -13,7 +13,7 @@ function pageNumber(segment: string): number | null {
 }
 
 export function generateStaticParams() {
-  return NO_PRERENDER
+  return tagPageParams('rest')
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
