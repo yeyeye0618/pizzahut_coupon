@@ -3,6 +3,7 @@ import {
   DEFAULT_QUERY,
   PAGE_SIZE,
   couponHref,
+  couponPath,
   getCoupons,
   landingTags,
   latestUpdate,
@@ -49,5 +50,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }
 
-  return [...listing, guide, ...tags]
+  // One page per live coupon. coupon_fetch deletes codes Pizza Hut no longer
+  // serves, so an expired coupon leaves the sitemap on the next regeneration.
+  const couponPages = coupons.map((coupon) => {
+    const updated = new Date(coupon.updated_at)
+    return {
+      url: absoluteUrl(couponPath(coupon.coupon_num)),
+      lastModified: Number.isNaN(updated.getTime()) ? lastModified : updated,
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    }
+  })
+
+  return [...listing, guide, ...tags, ...couponPages]
 }
