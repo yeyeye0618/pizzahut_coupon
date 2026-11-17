@@ -48,7 +48,9 @@ export function JsonLd({ coupons, path, name = SITE_NAME, dateModified }: JsonLd
             position: i + 1,
             item: {
               '@type': 'Offer',
-              name: `必勝客優惠代碼 ${coupon.coupon_num}`,
+              name: coupon.name
+                ? `${coupon.name}（必勝客優惠代碼 ${coupon.coupon_num}）`
+                : `必勝客優惠代碼 ${coupon.coupon_num}`,
               description: coupon.description?.trim() || undefined,
               url: formatOrderLink(coupon.coupon_num),
               ...(coupon.price != null && { price: coupon.price, priceCurrency: 'TWD' }),

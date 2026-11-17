@@ -18,6 +18,9 @@ export type Database = {
         Row: {
           coupon_num: string
           description: string
+          items: string[] | null
+          name: string | null
+          original_price: number | null
           price: number | null
           tags: string[] | null
           updated_at: string
@@ -25,6 +28,9 @@ export type Database = {
         Insert: {
           coupon_num: string
           description?: string
+          items?: string[] | null
+          name?: string | null
+          original_price?: number | null
           price?: number | null
           tags?: string[] | null
           updated_at?: string
@@ -32,6 +38,9 @@ export type Database = {
         Update: {
           coupon_num?: string
           description?: string
+          items?: string[] | null
+          name?: string | null
+          original_price?: number | null
           price?: number | null
           tags?: string[] | null
           updated_at?: string

@@ -154,6 +154,7 @@ function matchesKeyword(coupon: Coupon, keyword: string): boolean {
   const key = keyword.toLowerCase()
   return (
     coupon.coupon_num.toLowerCase().includes(key) ||
+    (coupon.name ?? '').toLowerCase().includes(key) ||
     (coupon.description ?? '').toLowerCase().includes(key) ||
     normalizeTags(coupon.tags).some((tag) => tag.toLowerCase().includes(key))
   )
@@ -255,4 +256,19 @@ export function formatUpdateDate(date: Date): string {
     month: '2-digit',
     day: '2-digit',
   }).format(date)
+}
+
+// ---------- deal value ----------
+
+/**
+ * Price as a fraction of the stated 最高價值, in the 折 notation people read
+ * at a glance: 399 / 861 -> 4.6. Null when either figure is missing or the
+ * "deal" is not cheaper. 最高價值 is the most the bundle could be worth, so
+ * this is the best case, not a guaranteed saving.
+ */
+export function discountOf(coupon: Pick<Coupon, 'price' | 'original_price'>): number | null {
+  const { price, original_price: value } = coupon
+  if (price == null || value == null || value <= 0 || price >= value) return null
+  const tenths = Math.round((price / value) * 100) / 10
+  return tenths > 0 && tenths < 10 ? tenths : null
 }
