@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { TagListing, resolveTag, tagMetadata, NO_PRERENDER } from './listing'
+import { TagListing, resolveTag, tagMetadata, tagPageParams } from './listing'
 
-// Rendered on first request (see listing.tsx), cached, and refreshed with the
-// `coupons` cache tag.
+// Prebuilt at deploy and refreshed with the `coupons` cache tag. A tag that
+// shows up later renders on its first request.
 export const revalidate = 3600
 export const dynamicParams = true
 
 type PageProps = { params: Promise<{ tag: string }> }
 
 export function generateStaticParams() {
-  return NO_PRERENDER
+  return tagPageParams('first')
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
