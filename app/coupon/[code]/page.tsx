@@ -48,7 +48,9 @@ async function load(params: Promise<Params>) {
 }
 
 function pageTitle(code: string, name: string | null, price: number | null) {
-  return `必勝客優惠代碼 ${code}${name ? `｜${name}` : ''}${price != null ? ` $${price}` : ''}`
+  // Some names already carry the price ("番茄肉醬起司麵 $69 (原價$139)"); don't repeat it.
+  const showPrice = price != null && !(name ?? '').includes(`$${price}`)
+  return `必勝客優惠代碼 ${code}${name ? `｜${name}` : ''}${showPrice ? ` $${price}` : ''}`
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -205,15 +207,11 @@ export default async function CouponPage({ params }: PageProps) {
           </details>
         )}
 
-        <p className="status">
-          {updated && (
-            <>
-              資料更新：<time dateTime={updated.toISOString()}>{formatUpdateDate(updated)}</time>
-              <span aria-hidden="true"> · </span>
-            </>
-          )}
-          代碼會定期回官網確認，下架後本頁會自動移除
-        </p>
+        {updated && (
+          <p className="status">
+            資料更新：<time dateTime={updated.toISOString()}>{formatUpdateDate(updated)}</time>
+          </p>
+        )}
       </section>
 
       {related.length > 0 && (
