@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { CouponGrid } from '@/components/CouponGrid'
 import { JsonLd } from '@/components/JsonLd'
 import { Pagination } from '@/components/Pagination'
@@ -21,26 +20,14 @@ import {
   tagHref,
 } from '@/lib/coupons'
 
-// Prebuilt at deploy, refreshed hourly like the data cache. A tag that shows
-// up later is rendered on its first request and cached from then on.
-export const revalidate = 3600
-export const dynamicParams = true
+/*
+ * Shared by /tag/[tag] (page 1) and /tag/[tag]/[page] (pages 2+). They used to
+ * be one optional catch-all route, /tag/[tag]/[[...page]]; on Vercel its
+ * notFound() answered 500 and a regeneration could leave a page stuck on a
+ * stale copy. Two plain dynamic routes avoid both.
+ */
 
-type Params = { tag: string; page?: string[] }
-type PageProps = { params: Promise<Params> }
-
-export async function generateStaticParams(): Promise<Params[]> {
-  const coupons = await getCoupons()
-  return landingTags(coupons).flatMap(({ tag, count }) => {
-    const pageCount = Math.ceil(count / PAGE_SIZE)
-    return Array.from({ length: pageCount }, (_, i) => ({
-      tag,
-      page: i === 0 ? [] : [String(i + 1)],
-    }))
-  })
-}
-
-function decode(value: string): string {
+export function decodeSegment(value: string): string {
   try {
     return decodeURIComponent(value)
   } catch {
@@ -48,25 +35,30 @@ function decode(value: string): string {
   }
 }
 
-/**
- * Resolve the URL to a tag and page, or null for anything that is not a real
- * landing page: an unknown or too-small tag, "/tag/x/1" (page 1 has no
- * number), a non-numeric or out-of-range page, or extra segments.
- */
-async function resolve(params: Promise<Params>) {
-  const { tag: rawTag, page: segments = [] } = await params
-  const tag = decode(rawTag)
-
-  if (segments.length > 1) return null
-  let page = 1
-  if (segments.length === 1) {
-    if (!/^[1-9]\d*$/.test(segments[0]) || segments[0] === '1') return null
-    page = Number(segments[0])
-  }
-
+/** Static params for every landing tag, with page 1 or pages 2..N. */
+export async function tagPageParams(which: 'first' | 'rest') {
   const coupons = await getCoupons()
-  const known = landingTags(coupons).find((t) => t.tag === tag)
-  if (!known) return null
+  return landingTags(coupons).flatMap(({ tag, count }) => {
+    const pageCount = Math.ceil(count / PAGE_SIZE)
+    if (which === 'first') return [{ tag }]
+    return Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => ({
+      tag,
+      page: String(i + 2),
+    }))
+  })
+}
+
+export type TagData = NonNullable<Awaited<ReturnType<typeof resolveTag>>>
+
+/**
+ * The tag and page as a landing page, or null for anything that isn't one:
+ * an unknown or too-small tag, or a page past the end.
+ */
+export async function resolveTag(rawTag: string, page: number) {
+  const tag = decodeSegment(rawTag)
+  const coupons = await getCoupons()
+  const allTags = landingTags(coupons)
+  if (!allTags.some((t) => t.tag === tag)) return null
 
   const tagged = couponsWithTag(coupons, tag)
   const slice = paginate(tagged, page)
@@ -78,13 +70,12 @@ async function resolve(params: Promise<Params>) {
     slice,
     lowest: lowestPrice(tagged),
     updated: latestUpdate(coupons),
-    allTags: landingTags(coupons),
+    allTags,
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const data = await resolve(params)
-  if (!data) return {}
+export function tagMetadata(data: TagData | null): Metadata {
+  if (!data) return { robots: { index: false } }
 
   const { tag, page, slice, lowest } = data
   const suffix = page > 1 ? `（第 ${page} 頁）` : ''
@@ -101,10 +92,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function TagPage({ params }: PageProps) {
-  const data = await resolve(params)
-  if (!data) notFound()
-
+export function TagListing({ data }: { data: TagData }) {
   const { tag, page, slice, lowest, updated, allTags } = data
   const query = { ...DEFAULT_QUERY, tags: [tag] }
 

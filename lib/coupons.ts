@@ -317,8 +317,10 @@ function productGroups(coupon: Coupon): Set<string> {
 
 /**
  * Up to `limit` other coupons most like this one, to give each coupon page
- * useful onward links. Shared contents (pasta with pasta, QQ球 with QQ球) count
- * three times as much as a shared tag; ties go to the closest price.
+ * useful onward links. Selection: shared contents (pasta with pasta, QQ球 with
+ * QQ球) count three times as much as a shared tag; ties go to the closest
+ * price. Display: the chosen few are then listed cheapest first, priceless
+ * ones last.
  */
 export function relatedCoupons(coupons: Coupon[], coupon: Coupon, limit = 6): Coupon[] {
   const ownTags = new Set(normalizeTags(coupon.tags))
@@ -339,6 +341,11 @@ export function relatedCoupons(coupons: Coupon[], coupon: Coupon, limit = 6): Co
     .sort((a, b) => b.score - a.score || a.gap - b.gap || a.other.coupon_num.localeCompare(b.other.coupon_num))
     .slice(0, limit)
     .map(({ other }) => other)
+    .sort(
+      (a, b) =>
+        (a.price ?? Number.POSITIVE_INFINITY) - (b.price ?? Number.POSITIVE_INFINITY) ||
+        a.coupon_num.localeCompare(b.coupon_num)
+    )
 }
 
 // ---------- titles ----------
