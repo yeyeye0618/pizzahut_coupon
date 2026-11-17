@@ -17,7 +17,9 @@ import {
   latestUpdate,
   lowestPrice,
   paginate,
+  tagFromSlug,
   tagHref,
+  TAG_SLUGS,
 } from '@/lib/coupons'
 
 /*
@@ -25,24 +27,20 @@ import {
  * be one optional catch-all route, /tag/[tag]/[[...page]]; on Vercel its
  * notFound() answered 500 and a regeneration could leave a page stuck on a
  * stale copy. Two plain dynamic routes avoid both.
+ *
+ * The [tag] segment is an ASCII slug (TAG_SLUGS): on Vercel a Chinese path
+ * that wasn't built at deploy answered 500, even for notFound().
  */
-
-export function decodeSegment(value: string): string {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
 
 /** Static params for every landing tag, with page 1 or pages 2..N. */
 export async function tagPageParams(which: 'first' | 'rest') {
   const coupons = await getCoupons()
   return landingTags(coupons).flatMap(({ tag, count }) => {
     const pageCount = Math.ceil(count / PAGE_SIZE)
-    if (which === 'first') return [{ tag }]
+    const slug = TAG_SLUGS[tag]
+    if (which === 'first') return [{ tag: slug }]
     return Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => ({
-      tag,
+      tag: slug,
       page: String(i + 2),
     }))
   })
@@ -54,8 +52,9 @@ export type TagData = NonNullable<Awaited<ReturnType<typeof resolveTag>>>
  * The tag and page as a landing page, or null for anything that isn't one:
  * an unknown or too-small tag, or a page past the end.
  */
-export async function resolveTag(rawTag: string, page: number) {
-  const tag = decodeSegment(rawTag)
+export async function resolveTag(slug: string, page: number) {
+  const tag = tagFromSlug(slug)
+  if (!tag) return null
   const coupons = await getCoupons()
   const allTags = landingTags(coupons)
   if (!allTags.some((t) => t.tag === tag)) return null

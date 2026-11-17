@@ -5,7 +5,7 @@
 收錄台灣必勝客（Pizza Hut）目前可用的優惠代碼，可依口味、尺寸、配餐篩選並依價格排序，一鍵跳轉官網訂餐。資料由 [coupon_fetch](https://github.com/yeyeye0618/coupon_fetch) 定期從官網抓取、存在 Supabase。
 
 - [使用說明與常見問題](https://pizzahutcoupon.vercel.app/guide)
-- 分類：[6吋](https://pizzahutcoupon.vercel.app/tag/6%E5%90%8B) · [9吋](https://pizzahutcoupon.vercel.app/tag/9%E5%90%8B) · [13吋](https://pizzahutcoupon.vercel.app/tag/13%E5%90%8B) · [配餐](https://pizzahutcoupon.vercel.app/tag/%E9%85%8D%E9%A4%90) · [飲料](https://pizzahutcoupon.vercel.app/tag/%E9%A3%B2%E6%96%99)
+- 分類：[6吋](https://pizzahutcoupon.vercel.app/tag/6-inch) · [9吋](https://pizzahutcoupon.vercel.app/tag/9-inch) · [13吋](https://pizzahutcoupon.vercel.app/tag/13-inch) · [配餐](https://pizzahutcoupon.vercel.app/tag/sides) · [飲料](https://pizzahutcoupon.vercel.app/tag/drinks)
 
 本站為非官方整理，優惠內容與使用規則以必勝客官網為準。
 
