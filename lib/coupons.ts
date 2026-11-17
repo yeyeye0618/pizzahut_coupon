@@ -1,6 +1,9 @@
 import { unstable_cache } from 'next/cache'
 import { Coupon, getSupabase } from './supabase'
 import { normalizeTags } from './coupon-utils'
+import { TAG_SLUGS, TAGS_BY_SLUG } from './tag-slugs'
+
+export { TAG_SLUGS }
 
 export const PAGE_SIZE = 48
 
@@ -212,15 +215,22 @@ export function paginate(coupons: Coupon[], page: number): CouponPage {
  */
 export const MIN_TAG_PAGE_COUPONS = 3
 
-/** /tag/6吋, /tag/6吋/2 … Page 1 never carries a number, so it has one URL. */
+/** The tag a /tag/<slug> URL names, or null. */
+export function tagFromSlug(slug: string): string | null {
+  return TAGS_BY_SLUG.get(slug) ?? null
+}
+
+/** /tag/6-inch, /tag/6-inch/2 … Page 1 never carries a number, so it has one URL. */
 export function tagHref(tag: string, page = 1): string {
-  const base = `/tag/${encodeURIComponent(tag)}`
+  const base = `/tag/${TAG_SLUGS[tag] ?? encodeURIComponent(tag)}`
   return page > 1 ? `${base}/${page}` : base
 }
 
 /** Tags that have a landing page, most coupons first. */
 export function landingTags(coupons: Coupon[]): { tag: string; count: number }[] {
-  return collectTags(coupons).filter(({ count }) => count >= MIN_TAG_PAGE_COUPONS)
+  return collectTags(coupons).filter(
+    ({ tag, count }) => count >= MIN_TAG_PAGE_COUPONS && tag in TAG_SLUGS
+  )
 }
 
 export function couponsWithTag(coupons: Coupon[], tag: string): Coupon[] {
