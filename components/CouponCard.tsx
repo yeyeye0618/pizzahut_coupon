@@ -2,7 +2,8 @@ import { FavoriteButton } from './FavoriteButton'
 import { HighlightedText } from './HighlightedText'
 import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils'
 import { Coupon } from '@/lib/supabase'
-import { PAGE_SIZE, discountOf } from '@/lib/coupons'
+import Link from 'next/link'
+import { PAGE_SIZE, couponPath, discountOf } from '@/lib/coupons'
 
 interface CouponCardProps {
   coupon: Coupon
@@ -22,7 +23,7 @@ const PRICE_PATTERN = /(價格：\$\d+(?:~\$\d+)?)/g
 /** "(2選1)", "{3選1}", "(副食3選1)" at the end of an item becomes a badge. */
 const CHOICE_SUFFIX = /\s*[(（{｛]([^()（）{}｛｝]*?\d+選\d+)[)）}｝]\s*$/
 
-function Description({ text, keyword }: { text: string; keyword: string }) {
+export function Description({ text, keyword }: { text: string; keyword: string }) {
   const paragraphs = text.split('。').filter(Boolean)
 
   return (
@@ -51,7 +52,7 @@ function Description({ text, keyword }: { text: string; keyword: string }) {
   )
 }
 
-function ItemList({ items, keyword }: { items: string[]; keyword: string }) {
+export function ItemList({ items, keyword }: { items: string[]; keyword: string }) {
   return (
     <ul className="item-list">
       {items.map((item, i) => {
@@ -117,14 +118,17 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
     >
       <div className="card-head">
         <h3 className="card-title">
-          <span className="code">
-            <HighlightedText text={coupon.coupon_num} keyword={keyword} />
-          </span>
-          {coupon.name && (
-            <span className="coupon-name">
-              <HighlightedText text={coupon.name} keyword={keyword} />
+          {/* Followable link to the coupon's own page: how crawlers reach /coupon/*. */}
+          <Link className="card-title-link" href={couponPath(coupon.coupon_num)} prefetch={false}>
+            <span className="code">
+              <HighlightedText text={coupon.coupon_num} keyword={keyword} />
             </span>
-          )}
+            {coupon.name && (
+              <span className="coupon-name">
+                <HighlightedText text={coupon.name} keyword={keyword} />
+              </span>
+            )}
+          </Link>
         </h3>
         <FavoriteButton code={coupon.coupon_num} />
       </div>

@@ -272,3 +272,48 @@ export function discountOf(coupon: Pick<Coupon, 'price' | 'original_price'>): nu
   const tenths = Math.round((price / value) * 100) / 10
   return tenths > 0 && tenths < 10 ? tenths : null
 }
+
+// ---------- coupon pages ----------
+
+/** /coupon/26707. Coupon codes are ASCII, so no encoding is needed. */
+export function couponPath(code: string): string {
+  return `/coupon/${encodeURIComponent(code)}`
+}
+
+export function findCoupon(coupons: Coupon[], code: string): Coupon | undefined {
+  return coupons.find((coupon) => coupon.coupon_num === code)
+}
+
+/**
+ * Up to `limit` other coupons sharing the most tags with this one, closest in
+ * price first. Gives each coupon page useful onward links.
+ */
+export function relatedCoupons(coupons: Coupon[], coupon: Coupon, limit = 6): Coupon[] {
+  const own = new Set(normalizeTags(coupon.tags))
+  const price = coupon.price ?? Number.POSITIVE_INFINITY
+  return coupons
+    .filter((other) => other.coupon_num !== coupon.coupon_num)
+    .map((other) => ({
+      other,
+      shared: normalizeTags(other.tags).filter((tag) => own.has(tag)).length,
+      gap: Math.abs((other.price ?? Number.POSITIVE_INFINITY) - price),
+    }))
+    .filter(({ shared }) => shared > 0)
+    .sort((a, b) => b.shared - a.shared || a.gap - b.gap || a.other.coupon_num.localeCompare(b.other.coupon_num))
+    .slice(0, limit)
+    .map(({ other }) => other)
+}
+
+// ---------- titles ----------
+
+/** "2026年11月" in Taiwan time, for "this month's coupons" titles. */
+export function currentMonthLabel(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: 'numeric',
+  }).formatToParts(now)
+  const year = parts.find((p) => p.type === 'year')?.value
+  const month = parts.find((p) => p.type === 'month')?.value
+  return `${year}年${month}月`
+}

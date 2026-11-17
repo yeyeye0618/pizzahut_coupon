@@ -11,6 +11,7 @@ import {
   PAGE_SIZE,
   couponHref,
   couponsWithTag,
+  currentMonthLabel,
   formatUpdateDate,
   getCoupons,
   landingTags,
@@ -91,7 +92,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonical = tagHref(tag, page)
 
   return {
-    title: { absolute: `必勝客${tag}優惠券｜${slice.total} 組優惠代碼${from}${suffix}` },
+    title: { absolute: `必勝客${tag}優惠券 ${currentMonthLabel()}｜${slice.total} 組優惠代碼${from}${suffix}` },
     description: `整理必勝客（Pizza Hut）${tag}相關的 ${slice.total} 組優惠代碼${
       lowest != null ? `，最低 $${lowest}` : ''
     }，依價格由低到高排列，點選即可帶入代碼訂餐。`,

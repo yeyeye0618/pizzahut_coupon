@@ -3,12 +3,13 @@ import { notFound } from 'next/navigation'
 import { CouponFilters } from '@/components/CouponFilters'
 import { CouponGrid } from '@/components/CouponGrid'
 import { JsonLd } from '@/components/JsonLd'
-import { SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site'
+import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/site'
 import { Pagination } from '@/components/Pagination'
 import { SiteFooter } from '@/components/SiteFooter'
 import {
   DEFAULT_QUERY,
   collectTags,
+  currentMonthLabel,
   couponHref,
   filterCoupons,
   getCoupons,
@@ -30,10 +31,14 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const filtered = isFilteredView(query)
   const suffix = query.page > 1 ? `（第 ${query.page} 頁）` : ''
   const canonical = filtered ? '/' : couponHref({ ...DEFAULT_QUERY, page: query.page })
+  const count = (await getCoupons()).length
 
   return {
     // absolute: the layout's "%s｜必勝客折價券大全" template would repeat the name.
-    title: { absolute: `${SITE_TITLE}${suffix}` },
+    // The month answers "最新 / 2026年11月" searches and signals freshness in results.
+    title: {
+      absolute: `${SITE_NAME}｜${currentMonthLabel()}最新 Pizza Hut 優惠代碼 ${count} 組${suffix}`,
+    },
     description: SITE_DESCRIPTION,
     // A searched or tag-filtered view is a user-facing slice, not a listing we
     // want in the index; the paginated listing itself is indexable.
