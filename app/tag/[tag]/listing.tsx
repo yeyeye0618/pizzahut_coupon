@@ -7,7 +7,6 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import {
   DEFAULT_QUERY,
-  PAGE_SIZE,
   couponHref,
   couponsWithTag,
   currentMonthLabel,
@@ -24,8 +23,14 @@ import {
  * Shared by /tag/[tag] (page 1) and /tag/[tag]/[page] (pages 2+). They used to
  * be one optional catch-all route, /tag/[tag]/[[...page]]; on Vercel its
  * notFound() answered 500 and a regeneration could leave a page stuck on a
- * stale copy. Two plain dynamic routes avoid both.
+ * stale copy. Two plain dynamic routes avoid the stale copy.
+ *
+ * Neither route prerenders at deploy (generateStaticParams returns []): on
+ * Vercel, once /tag/X was prerendered, any /tag/X/<n> that wasn't answered 500
+ * instead of 404, while a never-prerendered /tag/Y/<n> answered 404. Pages
+ * render on their first request and are then cached like any ISR page.
  */
+export const NO_PRERENDER: never[] = []
 
 export function decodeSegment(value: string): string {
   try {
@@ -33,19 +38,6 @@ export function decodeSegment(value: string): string {
   } catch {
     return value
   }
-}
-
-/** Static params for every landing tag, with page 1 or pages 2..N. */
-export async function tagPageParams(which: 'first' | 'rest') {
-  const coupons = await getCoupons()
-  return landingTags(coupons).flatMap(({ tag, count }) => {
-    const pageCount = Math.ceil(count / PAGE_SIZE)
-    if (which === 'first') return [{ tag }]
-    return Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => ({
-      tag,
-      page: String(i + 2),
-    }))
-  })
 }
 
 export type TagData = NonNullable<Awaited<ReturnType<typeof resolveTag>>>
