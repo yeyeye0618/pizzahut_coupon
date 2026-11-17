@@ -1314,6 +1314,117 @@ a.category-link:hover {
     color: var(--text-dim);
 }
 
+.footer-note a {
+    color: var(--cyan);
+    text-decoration: none;
+}
+
+.footer-note a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ---------- guide / FAQ ---------- */
+
+.guide-section {
+    margin-top: 28px;
+    max-width: 860px;
+}
+
+.guide-section h2 {
+    margin: 0 0 14px;
+    font-size: 1.3rem;
+}
+
+.guide-steps {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+
+.guide-steps li {
+    position: relative;
+    padding: 16px 18px 16px 58px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-elev);
+    counter-increment: step;
+}
+
+.guide-steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 18px;
+    top: 16px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.guide-steps h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+}
+
+.guide-steps p,
+.faq-item p {
+    margin: 0;
+    color: var(--text-soft);
+    line-height: 1.7;
+}
+
+.faq-list {
+    display: grid;
+    gap: 8px;
+}
+
+.faq-item {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elev);
+    padding: 0 18px;
+}
+
+.faq-item summary {
+    padding: 14px 0;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.faq-item summary:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.faq-item p {
+    padding: 0 0 16px;
+}
+
+.guide-cta {
+    margin: 20px 0 0;
+}
+
+.guide-cta a {
+    color: var(--cyan);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.guide-cta a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 @media (max-width: 640px) {
     .tag-page-filter {
         margin-left: 0;

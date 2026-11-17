@@ -43,6 +43,10 @@ export function SiteFooter({ tags, updated, currentTag }: SiteFooterProps) {
           </>
         )}
         本站為非官方整理，優惠內容與使用規則以必勝客官網為準。
+        <span aria-hidden="true"> · </span>
+        <Link href="/guide" prefetch={false}>
+          使用說明與常見問題
+        </Link>
       </p>
     </footer>
   )
