@@ -2,7 +2,7 @@ import { unstable_cache } from 'next/cache'
 import { Coupon, getSupabase } from './supabase'
 import { normalizeTags } from './coupon-utils'
 import { TAG_SLUGS, TAGS_BY_SLUG } from './tag-slugs'
-import { matchesFacets, normalizeFacets } from './facets'
+import { facetCounts, matchesFacets, normalizeFacets } from './facets'
 
 export { TAG_SLUGS }
 
@@ -130,18 +130,6 @@ export function isFilteredView(query: CouponQuery): boolean {
   )
 }
 
-export function collectTags(coupons: Coupon[]): { tag: string; count: number }[] {
-  const counter = new Map<string, number>()
-  for (const coupon of coupons) {
-    for (const tag of normalizeTags(coupon.tags)) {
-      counter.set(tag, (counter.get(tag) ?? 0) + 1)
-    }
-  }
-  return [...counter.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-Hant'))
-}
-
 function matchesKeyword(coupon: Coupon, keyword: string): boolean {
   if (!keyword) return true
   const key = keyword.toLowerCase()
@@ -216,16 +204,17 @@ export function tagHref(tag: string, page = 1): string {
   return page > 1 ? `${base}/${page}` : base
 }
 
-/** Tags that have a landing page, most coupons first. */
+/** Filters (lib/facets.ts) that have a landing page: sizes, then contents. */
 export function landingTags(coupons: Coupon[]): { tag: string; count: number }[] {
-  return collectTags(coupons).filter(
+  const { size, content } = facetCounts(coupons)
+  return [...size, ...content].filter(
     ({ tag, count }) => count >= MIN_TAG_PAGE_COUPONS && tag in TAG_SLUGS
   )
 }
 
 export function couponsWithTag(coupons: Coupon[], tag: string): Coupon[] {
   return sortCoupons(
-    coupons.filter((coupon) => normalizeTags(coupon.tags).includes(tag)),
+    coupons.filter((coupon) => matchesFacets(coupon, [tag])),
     'price-asc'
   )
 }

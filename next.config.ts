@@ -1,17 +1,20 @@
 import type { NextConfig } from "next";
-import { TAG_SLUGS } from "./lib/tag-slugs";
+import { RETIRED_TAGS } from "./lib/tag-slugs";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  // Tag pages moved from /tag/比薩 to /tag/pizza (see TAG_SLUGS in
-  // lib/coupons.ts). Permanent redirects keep the URLs search engines already
-  // indexed, and they run before any page code.
+  // Retired tag URLs (the Chinese ones, and the old 比薩/配餐 pages) go to the
+  // page that replaced them; see RETIRED_TAGS in lib/tag-slugs.ts. Numbered
+  // pages land on page 1, since the new page has its own page count.
+  // Permanent redirects keep what search engines already indexed, and they
+  // run before any page code.
   async redirects() {
-    return Object.entries(TAG_SLUGS).flatMap(([tag, slug]) => {
-      const from = `/tag/${encodeURIComponent(tag)}`
+    return Object.entries(RETIRED_TAGS).flatMap(([old, slug]) => {
+      const from = `/tag/${encodeURIComponent(old)}`
+      const destination = slug ? `/tag/${slug}` : "/"
       return [
-        { source: from, destination: `/tag/${slug}`, permanent: true },
-        { source: `${from}/:page`, destination: `/tag/${slug}/:page`, permanent: true },
+        { source: from, destination, permanent: true },
+        { source: `${from}/:page`, destination, permanent: true },
       ]
     })
   },

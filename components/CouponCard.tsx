@@ -1,6 +1,7 @@
 import { FavoriteButton } from './FavoriteButton'
 import { HighlightedText } from './HighlightedText'
-import { normalizeTags, formatOrderLink } from '@/lib/coupon-utils'
+import { formatOrderLink } from '@/lib/coupon-utils'
+import { couponFacets } from '@/lib/facets'
 import { Coupon } from '@/lib/supabase'
 import Link from 'next/link'
 import { PAGE_SIZE, couponPath, discountOf } from '@/lib/coupons'
@@ -102,7 +103,7 @@ function ClampedDescription({ coupon, text, keyword }: { coupon: Coupon; text: s
  */
 export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
   const description = (coupon.description ?? '').trim() || '暫無說明'
-  const tags = normalizeTags(coupon.tags)
+  const tags = couponFacets(coupon)
   const items = coupon.items?.filter(Boolean) ?? []
   const structured = items.length > 0
   const discount = discountOf(coupon)
