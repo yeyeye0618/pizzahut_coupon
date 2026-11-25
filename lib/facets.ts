@@ -142,6 +142,16 @@ export function matchesFacets(coupon: Coupon, selected: string[]): boolean {
   return canIncludeAll(coupon, contents)
 }
 
+/** The coupon's sizes, then every content it can include, in filter order. */
+export function couponFacets(coupon: Coupon): string[] {
+  const sizes = couponSizes(coupon)
+  const contents = couponContents(coupon)
+  return [
+    ...SIZE_FACETS.map(([name]) => name).filter((name) => sizes.has(name)),
+    ...CONTENT_FACETS.map(([name]) => name).filter((name) => contents.has(name)),
+  ]
+}
+
 export type FacetCount = { tag: string; count: number }
 
 /** Each filter with how many coupons have it, in display order; empty ones dropped. */

@@ -6,7 +6,8 @@ import { Description, ItemList } from '@/components/CouponCard'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { SiteFooter } from '@/components/SiteFooter'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import { formatOrderLink, normalizeTags } from '@/lib/coupon-utils'
+import { formatOrderLink } from '@/lib/coupon-utils'
+import { couponFacets } from '@/lib/facets'
 import {
   DEFAULT_QUERY,
   couponPath,
@@ -80,7 +81,7 @@ export default async function CouponPage({ params }: PageProps) {
 
   const { coupon, coupons } = data
   const code = coupon.coupon_num
-  const tags = normalizeTags(coupon.tags)
+  const tags = couponFacets(coupon)
   const landing = landingTags(coupons)
   const landingSet = new Set(landing.map(({ tag }) => tag))
   const primaryTag = tags.find((tag) => landingSet.has(tag))
