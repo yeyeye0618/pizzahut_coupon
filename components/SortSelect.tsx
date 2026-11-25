@@ -26,6 +26,7 @@ export function SortSelect({ query }: { query: CouponQuery }) {
       >
         <option value="price-asc">價格低 → 高</option>
         <option value="price-desc">價格高 → 低</option>
+        <option value="discount">折扣最多</option>
       </select>
       <button type="submit" className="sr-only">
         套用排序

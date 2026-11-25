@@ -663,7 +663,7 @@ h1 {
     grid-template-columns: auto 1fr;
     align-items: center;
     column-gap: 12px;
-    row-gap: 4px;
+    row-gap: 6px;
 }
 
 .facet-label {
@@ -674,19 +674,9 @@ h1 {
     min-width: 2.6em;
 }
 
-.facet-hint {
-    grid-column: 2;
-    font-size: 0.7rem;
-    color: var(--text-dim);
-}
-
 @media (max-width: 560px) {
     .facet-row {
         grid-template-columns: 1fr;
-    }
-
-    .facet-hint {
-        grid-column: 1;
     }
 }
 
