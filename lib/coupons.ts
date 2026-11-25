@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache'
 import { Coupon, getSupabase } from './supabase'
 import { normalizeTags } from './coupon-utils'
 import { TAG_SLUGS, TAGS_BY_SLUG } from './tag-slugs'
+import { matchesFacets, normalizeFacets } from './facets'
 
 export { TAG_SLUGS }
 
@@ -11,12 +12,10 @@ export const PAGE_SIZE = 48
 export const COUPONS_CACHE_TAG = 'coupons'
 
 export type SortMode = 'price-asc' | 'price-desc'
-export type MatchMode = 'union' | 'intersection'
-
 export type CouponQuery = {
   q: string
+  /** Selected filters (lib/facets.ts): sizes match any, contents match all. */
   tags: string[]
-  mode: MatchMode
   sort: SortMode
   page: number
   /**
@@ -30,7 +29,6 @@ export type CouponQuery = {
 export const DEFAULT_QUERY: CouponQuery = {
   q: '',
   tags: [],
-  mode: 'union',
   sort: 'price-asc',
   page: 1,
   fav: null,
@@ -73,8 +71,9 @@ export function parseCouponQuery(params: RawSearchParams): CouponQuery {
 
   return {
     q: (firstValue(params.q) ?? '').trim(),
-    tags: [...new Set(tags)],
-    mode: firstValue(params.mode) === 'intersection' ? 'intersection' : 'union',
+    // Links from before the grouped filters may carry ?mode= and old tag
+    // names; mode is ignored and the names are mapped or dropped.
+    tags: normalizeFacets(tags),
     sort: firstValue(params.sort) === 'price-desc' ? 'price-desc' : 'price-asc',
     page: Number.isFinite(page) && page > 0 ? page : 1,
     fav: parseFav(params.fav),
@@ -95,7 +94,6 @@ export function couponHref(query: CouponQuery, pathname = '/'): string {
   const params = new URLSearchParams()
   if (query.q) params.set('q', query.q)
   if (query.tags.length) params.set('tags', query.tags.join(','))
-  if (query.mode !== DEFAULT_QUERY.mode) params.set('mode', query.mode)
   if (query.sort !== DEFAULT_QUERY.sort) params.set('sort', query.sort)
   if (query.page > 1) params.set('page', String(query.page))
   if (query.fav) params.set('fav', query.fav.join(','))
@@ -144,14 +142,6 @@ export function collectTags(coupons: Coupon[]): { tag: string; count: number }[]
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-Hant'))
 }
 
-function matchesTags(couponTags: string[], query: CouponQuery): boolean {
-  if (!query.tags.length) return true
-  const owned = new Set(couponTags)
-  return query.mode === 'intersection'
-    ? query.tags.every((tag) => owned.has(tag))
-    : query.tags.some((tag) => owned.has(tag))
-}
-
 function matchesKeyword(coupon: Coupon, keyword: string): boolean {
   if (!keyword) return true
   const key = keyword.toLowerCase()
@@ -169,7 +159,7 @@ export function filterCoupons(coupons: Coupon[], query: CouponQuery): Coupon[] {
     (coupon) =>
       (!favs || favs.has(coupon.coupon_num)) &&
       matchesKeyword(coupon, query.q) &&
-      matchesTags(normalizeTags(coupon.tags), query)
+      matchesFacets(coupon, query.tags)
   )
 }
 
