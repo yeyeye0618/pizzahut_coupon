@@ -1,11 +1,12 @@
 import { CouponQuery, formatUpdateDate } from '@/lib/coupons'
+import type { FacetCount, FacetGroup } from '@/lib/facets'
 import { SearchBox } from './SearchBox'
 import { TagFilters } from './TagFilters'
 import { ThemeSwitcher } from './ThemeSwitcher'
 
 type CouponFiltersProps = {
   query: CouponQuery
-  tags: { tag: string; count: number }[]
+  facets: Record<FacetGroup, FacetCount[]>
   total: number
   showing: number
   matched: number
@@ -17,7 +18,7 @@ type CouponFiltersProps = {
  * Server component. Filter state lives in the URL rather than in React state;
  * the controls themselves are anchors and GET forms, so they work without JS.
  */
-export function CouponFilters({ query, tags, total, showing, matched, updated }: CouponFiltersProps) {
+export function CouponFilters({ query, facets, total, showing, matched, updated }: CouponFiltersProps) {
   const hasFilter = Boolean(query.q) || query.tags.length > 0
 
   return (
@@ -31,7 +32,7 @@ export function CouponFilters({ query, tags, total, showing, matched, updated }:
       </div>
       <h1>必勝客折價券大全</h1>
       <p className="subtitle">
-        收錄台灣 Pizza Hut 最新優惠代碼，支援依口味、尺寸、配餐篩選，一鍵跳轉即可訂餐。
+        收錄台灣 Pizza Hut 最新優惠代碼，可依比薩尺寸和套餐內容篩選，一鍵跳轉即可訂餐。
       </p>
 
       <div className="controls">
@@ -45,7 +46,7 @@ export function CouponFilters({ query, tags, total, showing, matched, updated }:
       </div>
 
       <div className="filter-bar">
-        <TagFilters query={query} tags={tags} />
+        <TagFilters query={query} facets={facets} />
       </div>
 
       <p className="status" aria-live="polite">

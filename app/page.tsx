@@ -8,7 +8,6 @@ import { Pagination } from '@/components/Pagination'
 import { SiteFooter } from '@/components/SiteFooter'
 import {
   DEFAULT_QUERY,
-  collectTags,
   currentMonthLabel,
   couponHref,
   filterCoupons,
@@ -21,6 +20,7 @@ import {
   sortCoupons,
   withQuery,
 } from '@/lib/coupons'
+import { facetCounts } from '@/lib/facets'
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -73,7 +73,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       )}
       <CouponFilters
         query={query}
-        tags={collectTags(allCoupons)}
+        facets={facetCounts(allCoupons)}
         total={allCoupons.length}
         showing={items.length}
         matched={total}

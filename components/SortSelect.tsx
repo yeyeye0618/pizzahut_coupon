@@ -12,7 +12,6 @@ export function SortSelect({ query }: { query: CouponQuery }) {
     <form className="sort-control" action="/" method="get">
       {query.q && <input type="hidden" name="q" value={query.q} />}
       {query.tags.length > 0 && <input type="hidden" name="tags" value={query.tags.join(',')} />}
-      {query.mode !== 'union' && <input type="hidden" name="mode" value={query.mode} />}
       <label htmlFor="sort-select">排序</label>
       <select
         id="sort-select"

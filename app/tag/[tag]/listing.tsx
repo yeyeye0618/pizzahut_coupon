@@ -21,6 +21,7 @@ import {
   tagHref,
   TAG_SLUGS,
 } from '@/lib/coupons'
+import { normalizeFacets } from '@/lib/facets'
 
 /*
  * Shared by /tag/[tag] (page 1) and /tag/[tag]/[page] (pages 2+). They used to
@@ -93,7 +94,7 @@ export function tagMetadata(data: TagData | null): Metadata {
 
 export function TagListing({ data }: { data: TagData }) {
   const { tag, page, slice, lowest, updated, allTags } = data
-  const query = { ...DEFAULT_QUERY, tags: [tag] }
+  const query = { ...DEFAULT_QUERY, tags: normalizeFacets([tag]) }
 
   return (
     <main className="container">

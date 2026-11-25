@@ -103,7 +103,6 @@ export function SearchBox({ query }: { query: CouponQuery }) {
   return (
     <form className="search-form" action="/" method="get" role="search" onSubmit={handleSubmit}>
       {query.tags.length > 0 && <input type="hidden" name="tags" value={query.tags.join(',')} />}
-      {query.mode !== 'union' && <input type="hidden" name="mode" value={query.mode} />}
       {query.sort !== 'price-asc' && <input type="hidden" name="sort" value={query.sort} />}
       {favView && <input type="hidden" name="fav" value={query.fav?.join(",") ?? ""} />}
       <div className="search-field">
