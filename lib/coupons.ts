@@ -11,7 +11,9 @@ export const PAGE_SIZE = 48
 /** Cache tag so a coupon_fetch run can invalidate everything with revalidateTag(). */
 export const COUPONS_CACHE_TAG = 'coupons'
 
-export type SortMode = 'price-asc' | 'price-desc'
+export type SortMode = 'price-asc' | 'price-desc' | 'discount'
+
+const SORT_MODES: readonly SortMode[] = ['price-asc', 'price-desc', 'discount']
 export type CouponQuery = {
   q: string
   /** Selected filters (lib/facets.ts): sizes match any, contents match all. */
@@ -74,7 +76,7 @@ export function parseCouponQuery(params: RawSearchParams): CouponQuery {
     // Links from before the grouped filters may carry ?mode= and old tag
     // names; mode is ignored and the names are mapped or dropped.
     tags: normalizeFacets(tags),
-    sort: firstValue(params.sort) === 'price-desc' ? 'price-desc' : 'price-asc',
+    sort: SORT_MODES.find((mode) => mode === firstValue(params.sort)) ?? 'price-asc',
     page: Number.isFinite(page) && page > 0 ? page : 1,
     fav: parseFav(params.fav),
   }
@@ -152,6 +154,7 @@ export function filterCoupons(coupons: Coupon[], query: CouponQuery): Coupon[] {
 }
 
 export function sortCoupons(coupons: Coupon[], sort: SortMode): Coupon[] {
+  if (sort === 'discount') return sortByDiscount(coupons)
   return [...coupons].sort((a, b) => {
     // Coupons without a price sort last in both directions rather than
     // pretending to be the cheapest or the most expensive.
@@ -164,6 +167,22 @@ export function sortCoupons(coupons: Coupon[], sort: SortMode): Coupon[] {
     }
     return a.coupon_num.localeCompare(b.coupon_num, 'zh-Hant')
   })
+}
+
+/**
+ * Deepest discount first: the lowest price / 最高價值 ratio (2.5折 before 9折).
+ * Coupons with no 最高價值 can't be compared, so they follow, cheapest first.
+ */
+function sortByDiscount(coupons: Coupon[]): Coupon[] {
+  const ratio = (c: Coupon) =>
+    c.price != null && c.original_price != null && c.original_price > c.price && c.original_price > 0
+      ? c.price / c.original_price
+      : Number.POSITIVE_INFINITY
+  const byPrice = sortCoupons(coupons, 'price-asc')
+  const rank = new Map(byPrice.map((c, i) => [c.coupon_num, i]))
+  return byPrice.sort(
+    (a, b) => ratio(a) - ratio(b) || rank.get(a.coupon_num)! - rank.get(b.coupon_num)!
+  )
 }
 
 export type CouponPage = {

@@ -11,9 +11,9 @@ type TagFiltersProps = {
   facets: Record<FacetGroup, FacetCount[]>
 }
 
-const GROUPS: { group: FacetGroup; label: string; hint: string }[] = [
-  { group: 'size', label: '尺寸', hint: '多選：任一種尺寸' },
-  { group: 'content', label: '內容', hint: '多選：同一張券都吃得到' },
+const GROUPS: { group: FacetGroup; label: string }[] = [
+  { group: 'size', label: '尺寸' },
+  { group: 'content', label: '內容' },
 ]
 
 /**
@@ -32,9 +32,9 @@ export function TagFilters({ query, facets }: TagFiltersProps) {
   return (
     <div className="filter-head">
       <div className="facet-groups">
-        {GROUPS.map(({ group, label, hint }) =>
+        {GROUPS.map(({ group, label }) =>
           facets[group].length ? (
-            <div key={group} className="facet-row" role="group" aria-label={`${label}（${hint}）`}>
+            <div key={group} className="facet-row" role="group" aria-label={label}>
               <span className="facet-label">{label}</span>
               <div className="tags-filter-list">
                 {facets[group].map(({ tag, count }) => {
@@ -55,7 +55,6 @@ export function TagFilters({ query, facets }: TagFiltersProps) {
                   )
                 })}
               </div>
-              <span className="facet-hint">{hint}</span>
             </div>
           ) : null
         )}
