@@ -31,7 +31,7 @@ export function TagFilters({ query, facets }: TagFiltersProps) {
 
   return (
     <div className="filter-head">
-      <div className="facet-groups">
+      <div className="facet-groups" data-tour="filters">
         {GROUPS.map(({ group, label }) =>
           facets[group].length ? (
             <div key={group} className="facet-row" role="group" aria-label={label}>

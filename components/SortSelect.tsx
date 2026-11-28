@@ -9,7 +9,7 @@ export function SortSelect({ query }: { query: CouponQuery }) {
   const [, startTransition] = useTransition()
 
   return (
-    <form className="sort-control" action="/" method="get">
+    <form className="sort-control" action="/" method="get" data-tour="sort">
       {query.q && <input type="hidden" name="q" value={query.q} />}
       {query.tags.length > 0 && <input type="hidden" name="tags" value={query.tags.join(',')} />}
       <label htmlFor="sort-select">排序</label>

@@ -105,7 +105,7 @@ export function SearchBox({ query }: { query: CouponQuery }) {
       {query.tags.length > 0 && <input type="hidden" name="tags" value={query.tags.join(',')} />}
       {query.sort !== 'price-asc' && <input type="hidden" name="sort" value={query.sort} />}
       {favView && <input type="hidden" name="fav" value={query.fav?.join(",") ?? ""} />}
-      <div className="search-field">
+      <div className="search-field" data-tour="search">
         <svg
           className="search-icon"
           viewBox="0 0 24 24"
@@ -147,6 +147,7 @@ export function SearchBox({ query }: { query: CouponQuery }) {
         <button
           type="button"
           className="search-fav"
+          data-tour="fav-view"
           aria-pressed={favView}
           title={favView ? '顯示全部優惠券' : '只看最愛'}
           onClick={toggleFavView}

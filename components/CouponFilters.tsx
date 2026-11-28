@@ -2,7 +2,7 @@ import { CouponQuery, formatUpdateDate } from '@/lib/coupons'
 import type { FacetCount, FacetGroup } from '@/lib/facets'
 import { SearchBox } from './SearchBox'
 import { TagFilters } from './TagFilters'
-import { ThemeSwitcher } from './ThemeSwitcher'
+import { SiteNav } from './SiteNav'
 
 type CouponFiltersProps = {
   query: CouponQuery
@@ -28,7 +28,7 @@ export function CouponFilters({ query, facets, total, showing, matched, updated 
           <span className="brand-dot" />
           PIZZA HUT COUPON
         </div>
-        <ThemeSwitcher />
+        <SiteNav tour />
       </div>
       <h1>必勝客折價券大全</h1>
       <p className="subtitle">

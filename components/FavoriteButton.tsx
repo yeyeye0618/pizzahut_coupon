@@ -17,6 +17,7 @@ export function FavoriteButton({ code }: { code: string }) {
     <button
       type="button"
       className="fav-btn"
+      data-tour="fav"
       aria-pressed={active}
       aria-label={active ? `將 ${code} 移出最愛` : `將 ${code} 加入最愛`}
       title={active ? '移出最愛' : '加入最愛'}
