@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteFooter } from '@/components/SiteFooter'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { SiteNav } from '@/components/SiteNav'
 import { getCoupons, landingTags, latestUpdate } from '@/lib/coupons'
 import { SITE_NAME } from '@/lib/site'
 
@@ -104,7 +104,7 @@ export default async function GuidePage() {
             <span aria-hidden="true">/</span>
             <span aria-current="page">使用說明</span>
           </nav>
-          <ThemeSwitcher />
+          <SiteNav />
         </div>
         <h1>{TITLE}</h1>
         <p className="subtitle">
@@ -124,7 +124,7 @@ export default async function GuidePage() {
         </ol>
       </section>
 
-      <section className="guide-section" aria-labelledby="faq-title">
+      <section id="faq" className="guide-section" aria-labelledby="faq-title">
         <h2 id="faq-title">常見問題</h2>
         <div className="faq-list">
           {FAQ.map(({ q, a }) => (

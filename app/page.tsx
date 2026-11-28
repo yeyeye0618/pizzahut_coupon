@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CouponFilters } from '@/components/CouponFilters'
+import { Tour } from '@/components/Tour'
 import { CouponGrid } from '@/components/CouponGrid'
 import { JsonLd } from '@/components/JsonLd'
 import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/site'
@@ -95,6 +96,8 @@ export default async function HomePage({ searchParams }: PageProps) {
       </section>
 
       <SiteFooter tags={landingTags(allCoupons)} updated={updated} />
+      {/* First visit only, and only on the plain listing, not a shared filter link. */}
+      <Tour autoStart={!isFilteredView(query)} />
     </main>
   )
 }

@@ -5,7 +5,7 @@ import { CouponGrid } from '@/components/CouponGrid'
 import { Description, ItemList } from '@/components/CouponCard'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { SiteFooter } from '@/components/SiteFooter'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { SiteNav } from '@/components/SiteNav'
 import { formatOrderLink } from '@/lib/coupon-utils'
 import { couponFacets } from '@/lib/facets'
 import {
@@ -139,7 +139,7 @@ export default async function CouponPage({ params }: PageProps) {
             <span aria-hidden="true">/</span>
             <span aria-current="page">{code}</span>
           </nav>
-          <ThemeSwitcher />
+          <SiteNav />
         </div>
 
         <div className="coupon-hero-head">

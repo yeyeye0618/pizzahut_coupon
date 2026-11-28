@@ -179,6 +179,7 @@ export function CouponCard({ coupon, keyword, index }: CouponCardProps) {
 
       <a
         className="copy-btn"
+        data-tour="order"
         href={formatOrderLink(coupon.coupon_num)}
         target="_blank"
         rel="noopener noreferrer nofollow"

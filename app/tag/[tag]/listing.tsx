@@ -4,7 +4,7 @@ import { CouponGrid } from '@/components/CouponGrid'
 import { JsonLd } from '@/components/JsonLd'
 import { Pagination } from '@/components/Pagination'
 import { SiteFooter } from '@/components/SiteFooter'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { SiteNav } from '@/components/SiteNav'
 import {
   DEFAULT_QUERY,
   PAGE_SIZE,
@@ -112,7 +112,7 @@ export function TagListing({ data }: { data: TagData }) {
             <span aria-hidden="true">/</span>
             <span aria-current="page">{tag}</span>
           </nav>
-          <ThemeSwitcher />
+          <SiteNav />
         </div>
 
         <h1>必勝客{tag}優惠券</h1>
