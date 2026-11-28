@@ -110,7 +110,14 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
     returnFocus.current = document.activeElement as HTMLElement | null
     markSeen()
     setIndex(0)
+    setRect(null)
     setSteps(present)
+  }, [])
+
+  // Changing step hides the spotlight until the next control is in place.
+  const goTo = useCallback((next: number) => {
+    setRect(null)
+    setIndex(next)
   }, [])
 
   const close = useCallback(() => {
@@ -132,33 +139,79 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
 
   const step = steps?.[index]
 
-  // Bring the step's control into view, then keep the spotlight on it while
-  // the page scrolls or resizes.
+  // Each step: hide the spotlight, scroll the control into view, wait until it
+  // stops moving, then show the spotlight and popover there in one go. (They
+  // used to slide along with the scroll and trailed behind the control.)
   useEffect(() => {
     if (!step) return
     const element = targetOf(step)
     if (!element) return
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    element.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
+    const read = (): Rect => {
+      const r = element.getBoundingClientRect()
+      return { top: r.top, left: r.left, width: r.width, height: r.height }
+    }
 
-    let frame = 0
-    const measure = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        const r = element.getBoundingClientRect()
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+    let settled = false
+    let timer = 0
+    const show = (r: Rect) => {
+      settled = true
+      setRect(r)
+    }
+
+    const start = read()
+    const vh = window.innerHeight
+    const margin = 80
+    const inView = start.top >= margin && start.top + start.height <= vh - margin
+    if (!inView) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      // Vertical only: scrollIntoView would also scroll overflow-hidden
+      // ancestors sideways.
+      window.scrollTo({
+        top: window.scrollY + start.top - Math.max(margin, (vh - start.height) / 2),
+        behavior: reduce ? 'auto' : 'smooth',
       })
     }
-    measure()
-    // Smooth scrolling moves the target after this first measurement.
-    const settle = window.setTimeout(measure, 400)
-    window.addEventListener('scroll', measure, { passive: true })
-    window.addEventListener('resize', measure)
+    // Wait until the control holds still: covers the smooth scroll and the
+    // page's entrance animation, which is still running on a first visit.
+    let last = start
+    let still = 0
+    let waited = 0
+    const poll = () => {
+      const now = read()
+      still = now.top === last.top && now.left === last.left && now.width === last.width ? still + 1 : 0
+      last = now
+      waited += 40
+      if (still >= 2 || waited >= 1500) show(now)
+      else timer = window.setTimeout(poll, 40)
+    }
+    timer = window.setTimeout(poll, 40)
+
+    // After that, follow the control: at once on scroll and resize, and on a
+    // slow check for layout shifts nothing announces (a web font swapping in
+    // on a first visit nudges the buttons).
+    const follow = () => {
+      if (settled) setRect(read())
+    }
+    const drift = window.setInterval(() => {
+      if (!settled) return
+      const now = read()
+      setRect((prev) =>
+        prev &&
+        prev.top === now.top &&
+        prev.left === now.left &&
+        prev.width === now.width &&
+        prev.height === now.height
+          ? prev
+          : now
+      )
+    }, 250)
+    window.addEventListener('scroll', follow, { passive: true, capture: true })
+    window.addEventListener('resize', follow)
     return () => {
-      cancelAnimationFrame(frame)
-      window.clearTimeout(settle)
-      window.removeEventListener('scroll', measure)
-      window.removeEventListener('resize', measure)
+      window.clearTimeout(timer)
+      window.clearInterval(drift)
+      window.removeEventListener('scroll', follow, { capture: true })
+      window.removeEventListener('resize', follow)
     }
   }, [step])
 
@@ -169,20 +222,22 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
     setPopSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }))
   }, [step, rect])
 
+  const ready = rect !== null
   useEffect(() => {
-    if (steps) nextRef.current?.focus()
-  }, [steps, index])
+    // Only once shown: a hidden popover can't take focus.
+    if (steps && ready) nextRef.current?.focus({ preventScroll: true })
+  }, [steps, index, ready])
 
   useEffect(() => {
     if (!steps) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close()
-      else if (event.key === 'ArrowRight') setIndex((i) => Math.min(i + 1, steps.length - 1))
-      else if (event.key === 'ArrowLeft') setIndex((i) => Math.max(i - 1, 0))
+      else if (event.key === 'ArrowRight' && index < steps.length - 1) goTo(index + 1)
+      else if (event.key === 'ArrowLeft' && index > 0) goTo(index - 1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [steps, close])
+  }, [steps, index, close, goTo])
 
   if (!steps || !step) return null
 
@@ -204,7 +259,9 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
 
   return createPortal(
     <div className="tour-layer">
-      {rect && (
+      {/* No fade on the spotlight: its shadow is the dimming, so fading it
+          would flash the page. It jumps straight to the next control. */}
+      {rect ? (
         <div
           className="tour-spotlight"
           style={{
@@ -214,8 +271,11 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
             height: rect.height + PAD * 2,
           }}
         />
+      ) : (
+        <div className="tour-dim" />
       )}
       <div
+        key={index}
         ref={popRef}
         className="tour-pop"
         role="dialog"
@@ -243,7 +303,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
             <button
               type="button"
               className="tour-btn"
-              onClick={() => setIndex((i) => i - 1)}
+              onClick={() => goTo(index - 1)}
               disabled={index === 0}
             >
               上一步
@@ -252,7 +312,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
               ref={nextRef}
               type="button"
               className="tour-btn primary"
-              onClick={() => (last ? close() : setIndex((i) => i + 1))}
+              onClick={() => (last ? close() : goTo(index + 1))}
             >
               {last ? '完成' : '下一步'}
             </button>

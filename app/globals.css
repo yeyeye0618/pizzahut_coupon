@@ -329,7 +329,19 @@ body::before {
     outline: 2px solid var(--accent);
     outline-offset: 0;
     pointer-events: none;
-    transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+/* While scrolling to the next control: dimmed, nothing lit yet. */
+.tour-dim {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 7, 11, 0.62);
+}
+
+@keyframes tour-in {
+    from {
+        opacity: 0;
+    }
 }
 
 .tour-pop {
@@ -341,6 +353,7 @@ body::before {
     background: var(--bg-elev);
     color: var(--text);
     box-shadow: var(--shadow-pop);
+    animation: tour-in 0.16s ease-out;
 }
 
 .tour-close {
@@ -443,8 +456,8 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .tour-spotlight {
-        transition: none;
+    .tour-pop {
+        animation: none;
     }
 }
 
